@@ -26,6 +26,17 @@ func Setup() *gin.Engine {
 		})
 	})
 
+	// 添加静态文件服务
+	r.Static("/static", "../frontend/static")
+
+	// 添加HTML模板
+	r.LoadHTMLGlob("../frontend/templates/*")
+
+	// 添加首页路由
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "auth.html", nil)
+	})
+
 	r.POST("/api/register", controller.RegisterHandler)
 	r.POST("/api/login", controller.LoginHandler)
 

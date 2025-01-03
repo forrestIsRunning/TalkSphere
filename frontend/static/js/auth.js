@@ -37,13 +37,13 @@ async function handleLogin(event) {
     }
 }
 
-// 处理注册
 async function handleRegister(event) {
     event.preventDefault();
     
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const email = document.getElementById('registerEmail').value;
 
     if (password !== confirmPassword) {
         alert('两次输入的密码不一致');
@@ -56,18 +56,22 @@ async function handleRegister(event) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ 
+                username, 
+                password,
+                email 
+            })
         });
 
         const data = await response.json();
         
         if (response.ok) {
             alert('注册成功！请登录');
-            toggleForms(); // 切换到登录表单
+            toggleForms();
         } else {
-            alert(data.error || '注册失败');
+            alert(data.msg || '注册失败');
         }
     } catch (error) {
         alert('网络错误，请稍后重试');
     }
-} 
+}
