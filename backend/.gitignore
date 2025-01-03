@@ -1,0 +1,63 @@
+# IntelliJ IDEA specific
+.idea/
+*.iml
+*.iws
+out/
+
+# Logs
+*.log
+
+# Compiled class files
+*.class
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Java JAR/WAR files
+*.jar
+*.war
+
+# Generated directories
+target/
+build/
+dist/
+
+# Maven specific
+.mvn/
+!**/src/main/**/maven-archiver/
+!**/src/main/**/maven-status/
+!**/src/main/**/.cache/
+
+# Gradle specific
+.gradle/
+build/
+
+# Node.js specific
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# JetBrains-related files
+.idea/
+*.iml
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/dictionaries
+.idea/libraries
+.idea/modules.xml
+.idea/shelf/
+.idea/httpRequests/
+.idea/markdown-navigator/
+
+# Virtual environment
+venv/
+.env/
+.envrc
+.env.*
