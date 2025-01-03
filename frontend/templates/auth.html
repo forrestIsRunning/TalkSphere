@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>论坛系统 - 登录/注册</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 添加论坛系统标题 -->
+        <h1 class="system-title">论坛系统</h1>
+        
+        <!-- 登录表单 -->
+        <div class="form-container" id="loginForm">
+            <h2>登录</h2>
+            <form onsubmit="return handleLogin(event)">
+                <div class="form-group">
+                    <input type="text" id="loginUsername" placeholder="用户名" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="密码" required>
+                </div>
+                <button type="submit" class="btn">登录</button>
+            </form>
+            <p>还没有账号？<a href="#" onclick="toggleForms()">立即注册</a></p>
+        </div>
+
+        <!-- 注册表单 -->
+        <div class="form-container hidden" id="registerForm">
+            <h2>注册</h2>
+            <form onsubmit="return handleRegister(event)">
+                <div class="form-group">
+                    <input type="text" id="registerUsername" placeholder="用户名" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="registerPassword" placeholder="密码" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="confirmPassword" placeholder="确认密码" required>
+                </div>
+                <button type="submit" class="btn">注册</button>
+            </form>
+            <p>已有账号？<a href="#" onclick="toggleForms()">立即登录</a></p>
+        </div>
+    </div>
+    <script src="/static/js/auth.js"></script>
+</body>
+</html> 
