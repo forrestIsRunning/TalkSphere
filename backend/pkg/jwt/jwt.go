@@ -1,9 +1,9 @@
 package jwt
 
 import (
+	"TalkSphere/setting"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"imitation_go-project-demo/setting"
 	"time"
 )
 

@@ -1,10 +1,10 @@
 package redis
 
 import (
+	"TalkSphere/setting"
 	"fmt"
 	"github.com/go-redis/redis"
 	"go.uber.org/zap"
-	"imitation_go-project-demo/setting"
 )
 
 var (

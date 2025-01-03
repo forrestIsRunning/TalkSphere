@@ -1,10 +1,12 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
-	"imitation_go-project-demo/logger"
-	"imitation_go-project-demo/setting"
+	"TalkSphere/controller"
+	"TalkSphere/logger"
+	"TalkSphere/setting"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Setup() *gin.Engine {
@@ -23,5 +25,9 @@ func Setup() *gin.Engine {
 			"msg": "404",
 		})
 	})
+
+	r.POST("/api/register", controller.RegisterHandler)
+	r.POST("/api/login", controller.LoginHandler)
+
 	return r
 }

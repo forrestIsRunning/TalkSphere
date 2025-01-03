@@ -1,11 +1,11 @@
 package logger
 
 import (
+	"TalkSphere/setting"
 	"github.com/gin-gonic/gin"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"imitation_go-project-demo/setting"
 	"net"
 	"net/http"
 	"net/http/httputil"

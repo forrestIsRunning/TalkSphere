@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/TalkSphere.iml" filepath="$PROJECT_DIR$/.idea/TalkSphere.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/codeCollection.iml" filepath="$PROJECT_DIR$/.idea/codeCollection.iml" />
     </modules>
   </component>
 </project>

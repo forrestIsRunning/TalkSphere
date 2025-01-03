@@ -3,7 +3,8 @@ package encrypt
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"imitation_go-project-demo/setting"
+
+	"TalkSphere/setting"
 )
 
 func EncryptPassword(opassword string) string {

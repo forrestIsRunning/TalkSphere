@@ -14,7 +14,7 @@ log:
 mysql:
   host: "127.0.0.1"
   port: 3306
-  user: "root"
+  user: "forrest"
   password: "571400yst"
   db: "TalkSphere"
   max_open_connection: 20

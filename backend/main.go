@@ -1,15 +1,14 @@
 package main
 
 import (
+	"TalkSphere/dao/mysql"
+	"TalkSphere/logger"
+	"TalkSphere/pkg/snowflake"
+	"TalkSphere/router"
+	"TalkSphere/setting"
 	"context"
 	"fmt"
 	"go.uber.org/zap"
-	"imitation_go-project-demo/controller"
-	"imitation_go-project-demo/dao/mysql"
-	"imitation_go-project-demo/logger"
-	"imitation_go-project-demo/pkg/snowflake"
-	"imitation_go-project-demo/router"
-	"imitation_go-project-demo/setting"
 	"log"
 	"net/http"
 	"os"
@@ -50,10 +49,10 @@ func main() {
 		return
 	}
 	// 初始化 gin 框架内置的翻译器
-	if err := controller.InitTrans("zh"); err != nil {
-		zap.L().Fatal("controller.InitTrans() failed ", zap.Error(err))
-		return
-	}
+	//if err := controller.InitTrans("zh"); err != nil {
+	//	zap.L().Fatal("controller.InitTrans() failed ", zap.Error(err))
+	//	return
+	//}
 	// 5. 注册路由
 	r := router.Setup()
 	// 6. 启动服务（优雅关机）

@@ -1,13 +1,13 @@
 package mysql
 
 import (
+	"TalkSphere/setting"
 	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"imitation_go-project-demo/setting"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +35,7 @@ func Init(cfg *setting.MysqlConfig) (err error) {
 	//"user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn := strings.Join([]string{cfg.User, ":", cfg.PassWord, "@tcp(", cfg.Host, ":", strconv.Itoa(cfg.Port), ")/", cfg.DB,
 		"?charset=utf8&parseTime=true&loc=Local"}, "")
-
+	fmt.Println("dns:", dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.New(
 			//设置Logger
