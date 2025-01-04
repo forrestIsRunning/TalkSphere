@@ -51,6 +51,10 @@ type UpdateAvatarParams struct {
 }
 
 // TODO 未来对接邮箱注册
+// username
+// email
+// password
+
 func RegisterHandler(c *gin.Context) {
 	// 1. 获取参数和参数校验
 	var params RegisterParams
@@ -74,6 +78,7 @@ func RegisterHandler(c *gin.Context) {
 
 	// 4. 创建用户
 	userID := snowflake.GenID()
+	//TODO 新用户默认xx头像
 	user = models.User{
 		UserID:   userID,
 		Username: params.Username,
@@ -121,7 +126,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	ResponseSuccess(c, gin.H{
-		"token":    token,
+		"token":    "Bearer " + token,
 		"user_id":  user.UserID,
 		"username": user.Username,
 	})

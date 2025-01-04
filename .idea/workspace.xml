@@ -4,35 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28546808-a64a-4a83-9f7e-b6b49bea24a9" name="Changes" comment="前端注册页面增加邮箱 &amp;&amp; 后端router中增加静态文静服务">
-      <change afterPath="$PROJECT_DIR$/backend/middlewares/jwt.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/middlewares/oss.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/oss/oss.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/upload/upload.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/router/user.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/css/forum.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/css/profile.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/forum.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/profile.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/forum.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/profile.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeCollection.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeCollection.iml" afterDir="false" />
+    <list default="true" id="28546808-a64a-4a83-9f7e-b6b49bea24a9" name="Changes" comment="更改目录结构">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/conf/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/conf/config.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/controller/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/dao/mysql/mysql.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/dao/mysql/mysql.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/middlewares/auth.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/models/params.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/models/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/router.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/setting/setting.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/setting/setting.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/static/css/auth.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/static/css/auth.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/static/js/auth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/auth.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/auth.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,11 +71,11 @@
       <recent name="$PROJECT_DIR$/k8s/code/ctl" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/pkg" />
       <recent name="$PROJECT_DIR$/backend/middlewares" />
       <recent name="$PROJECT_DIR$/k8s/code/ctl/deploy" />
       <recent name="$PROJECT_DIR$/k8s/code/ctl/apis" />
       <recent name="$PROJECT_DIR$/k8s/yaml/kubeVirt/hotplug/memory/pic" />
-      <recent name="$PROJECT_DIR$/k8s/yaml" />
     </key>
   </component>
   <component name="RunManager">
@@ -137,7 +111,12 @@
     <MESSAGE value="add grpc helloworld" />
     <MESSAGE value="add grpc service running on k8s" />
     <MESSAGE value="前端注册页面增加邮箱 &amp;&amp; 后端router中增加静态文静服务" />
-    <option name="LAST_COMMIT_MESSAGE" value="前端注册页面增加邮箱 &amp;&amp; 后端router中增加静态文静服务" />
+    <MESSAGE value="增加mysql close" />
+    <MESSAGE value="增加oss图片上传功能" />
+    <MESSAGE value="更改项目结构" />
+    <MESSAGE value="前端修改" />
+    <MESSAGE value="更改目录结构" />
+    <option name="LAST_COMMIT_MESSAGE" value="更改目录结构" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
