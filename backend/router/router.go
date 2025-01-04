@@ -1,8 +1,8 @@
 package router
 
 import (
-	"TalkSphere/logger"
 	"TalkSphere/middlewares"
+	"TalkSphere/pkg/logger"
 	"TalkSphere/setting"
 	"net/http"
 
