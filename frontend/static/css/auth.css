@@ -1,96 +1,90 @@
-* {
+body {
+    background-color: #f8f9fa;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .container {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
     max-width: 400px;
-    margin: 50px auto;
+    margin: 0 auto;
     padding: 20px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-control {
+    border: 1px solid #ced4da;
     border-radius: 5px;
-    background-color: #fff;
-}
-
-.form-container {
-    transition: all 0.3s ease;
-}
-
-.form-container.hidden {
-    display: none;
-}
-
-h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-}
-
-.form-group {
+    padding: 0.75rem;
     margin-bottom: 1rem;
 }
 
-input {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-input:focus {
-    outline: none;
-    border-color: #4a90e2;
-}
-
-.btn {
-    width: 100%;
-    padding: 0.8rem;
-    background-color: #4a90e2;
-    color: white;
+.btn-primary {
+    background-color: #0d6efd;
     border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    padding: 0.75rem;
+    border-radius: 5px;
+    width: 100%;
+    font-weight: 500;
 }
 
-.btn:hover {
-    background-color: #357abd;
-}
-
-p {
-    text-align: center;
-    margin-top: 1rem;
-}
-
-a {
-    color: #4a90e2;
+.btn-link {
+    color: #0d6efd;
     text-decoration: none;
+    padding: 0.5rem;
+    width: 100%;
+    text-align: center;
 }
 
-a:hover {
+.btn-link:hover {
     text-decoration: underline;
 }
 
-.system-title {
+.d-none {
+    display: none !important;
+}
+
+.min-vh-100 {
+    min-height: 100vh;
+}
+
+.text-center {
     text-align: center;
-    color: #333;
-    margin-bottom: 30px;
-    font-size: 2em;
+}
+
+h2 {
+    color: #212529;
+    margin-bottom: 1.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.d-grid {
+    display: grid;
+    gap: 0.5rem;
 }

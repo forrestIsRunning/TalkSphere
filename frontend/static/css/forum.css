@@ -1,0 +1,92 @@
+body {
+    background-color: #f8f9fa;
+    padding-top: 70px;
+}
+
+.main-container {
+    margin-top: 20px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* 导航栏样式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+}
+
+/* 用户头像样式 */
+#userAvatar {
+    transition: transform 0.2s;
+}
+
+#userAvatar:hover {
+    transform: scale(1.1);
+}
+
+/* 帖子卡片样式 */
+.post-card {
+    transition: transform 0.2s;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+}
+
+.post-tags .badge {
+    font-weight: normal;
+    padding: 5px 10px;
+}
+
+.post-stats {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.post-stats i {
+    font-size: 1rem;
+}
+
+/* 左侧边栏样式 */
+.list-group-item {
+    border: none;
+    padding: 12px 20px;
+    margin-bottom: 2px;
+    border-radius: 5px !important;
+}
+
+.list-group-item.active {
+    background-color: #e9ecef;
+    color: #212529;
+    font-weight: 500;
+}
+
+.list-group-item:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+
+/* 发帖按钮样式 */
+#newPostBtn {
+    padding: 8px 20px;
+    font-weight: 500;
+}
+
+/* 模态框样式 */
+.modal-content {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,.2);
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+} 
