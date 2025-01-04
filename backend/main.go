@@ -2,7 +2,7 @@ package main
 
 import (
 	"TalkSphere/dao/mysql"
-	"TalkSphere/logger"
+	"TalkSphere/pkg/logger"
 	"TalkSphere/pkg/oss"
 	"TalkSphere/pkg/snowflake"
 	"TalkSphere/router"
