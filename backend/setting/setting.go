@@ -2,6 +2,7 @@ package setting
 
 import (
 	"fmt"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
@@ -17,6 +18,7 @@ type Config struct {
 	*SnowFlakeConfig `mapstructure:"snowflake"`
 	*EncryptConfig   `mapstructure:"encrypt"`
 	*AuthConfig      `mapstructure:"auth"`
+	*OSSConfig       `mapstructure:"oss"`
 }
 
 type AppConfig struct {
@@ -67,6 +69,13 @@ type SnowFlakeConfig struct {
 
 type AuthConfig struct {
 	JwtExpire int64 `mapstructure:"jwt_expire"`
+}
+
+type OSSConfig struct {
+	BucketName string `mapstructure:"bucket_name"`
+	Region     string `mapstructure:"region"`
+	SecretID   string `mapstructure:"secret_id"`
+	SecretKey  string `mapstructure:"secret_key"`
 }
 
 func Init() (err error) {

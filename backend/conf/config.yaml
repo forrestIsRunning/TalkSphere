@@ -39,3 +39,9 @@ snowflake:
 
 auth:
   jwt_expire: 8760
+
+oss:
+  bucket_name: "talkspere-1321722407"
+  region: "ap-beijing"
+  secret_id: "AKIDtfEZheOuCG8pLdlgOs9E5jARWO5LSL1T"
+  secret_key: "HLCqGTSFpHTUHrFPQRGsGRRFrHUTO9j6"
