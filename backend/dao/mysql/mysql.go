@@ -63,3 +63,9 @@ func Init(cfg *setting.MysqlConfig) (err error) {
 	DB = db
 	return nil
 }
+
+func Close() {
+	db, _ := DB.DB()
+	db.Close()
+	return
+}
