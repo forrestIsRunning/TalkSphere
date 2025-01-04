@@ -1,8 +1,8 @@
 package router
 
 import (
-	"TalkSphere/controller"
 	"TalkSphere/logger"
+	"TalkSphere/middlewares"
 	"TalkSphere/setting"
 	"net/http"
 
@@ -16,29 +16,28 @@ func Setup() *gin.Engine {
 	r := gin.Default()
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
-
-	r.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"msg": "404",
-		})
-	})
-
-	// 添加静态文件服务
+	// 静态文件服务
 	r.Static("/static", "../frontend/static")
 
-	// 添加HTML模板
+	// HTML模板
 	r.LoadHTMLGlob("../frontend/templates/*")
 
-	// 添加首页路由
+	// 首页和登录页
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "auth.html", nil)
 	})
 
-	r.POST("/api/register", controller.RegisterHandler)
-	r.POST("/api/login", controller.LoginHandler)
+	// 论坛主页（需要登录）
+	r.GET("/forum", middlewares.JWTAuthMiddleware(), func(c *gin.Context) {
+		c.HTML(http.StatusOK, "forum.html", nil)
+	})
+
+	// 个人资料页面（需要登录）
+	r.GET("/profile", middlewares.JWTAuthMiddleware(), func(c *gin.Context) {
+		c.HTML(http.StatusOK, "profile.html", nil)
+	})
+
+	UserInit(r)
 
 	return r
 }

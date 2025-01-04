@@ -3,28 +3,32 @@ package main
 import (
 	"TalkSphere/dao/mysql"
 	"TalkSphere/logger"
+	"TalkSphere/pkg/oss"
 	"TalkSphere/pkg/snowflake"
 	"TalkSphere/router"
 	"TalkSphere/setting"
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 func main() {
 	//1.config init
 	if err := setting.Init(); err != nil {
-		fmt.Printf("setting.Init() failed %v\n", err)
+		fmt.Printf("init settings failed, err:%v\n", err)
+		return
 	}
 	//2.logger init
 	if err := logger.Init(setting.Conf.LogConfig); err != nil {
-		fmt.Printf("logger.Init(setting.Conf.LogConfig) failed %v\n", err)
+		fmt.Printf("init logger failed, err:%v\n", err)
+		return
 	}
 	zap.L().Debug("logger init success\n")
 	defer func(l *zap.Logger) {
@@ -35,24 +39,26 @@ func main() {
 	}(zap.L())
 	//3.mysql
 	if err := mysql.Init(setting.Conf.MysqlConfig); err != nil {
-		zap.L().Fatal("mysql.Init() failed ", zap.Error(err))
+		fmt.Printf("init mysql failed, err:%v\n", err)
 		return
 	}
+	defer mysql.Close()
 	//4.redis
-	/*if err := redis.Init(setting.Conf.RedisConfig); err != nil {
-		zap.L().Fatal("redis.Init() failed ", zap.Error(err))
+	//if err := redis.Init(setting.Conf.RedisConfig); err != nil {
+	//	fmt.Printf("init redis failed, err:%v\n", err)
+	//	return
+	//}
+	//defer redis.Close()
+	//5.oss
+	if err := oss.Init(setting.Conf.OSSConfig); err != nil {
+		fmt.Printf("init oss failed, err:%v\n", err)
 		return
-	}*/
-	//
+	}
 	if err := snowflake.Init(setting.Conf.SnowFlakeConfig.StartTime, setting.Conf.SnowFlakeConfig.MachineID); err != nil {
 		zap.L().Fatal("snowflake.Init() failed ", zap.Error(err))
 		return
 	}
-	// 初始化 gin 框架内置的翻译器
-	//if err := controller.InitTrans("zh"); err != nil {
-	//	zap.L().Fatal("controller.InitTrans() failed ", zap.Error(err))
-	//	return
-	//}
+
 	// 5. 注册路由
 	r := router.Setup()
 	// 6. 启动服务（优雅关机）

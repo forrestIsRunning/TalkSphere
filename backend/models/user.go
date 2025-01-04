@@ -11,3 +11,7 @@ type User struct {
 	Avatar   string `json:"avatar"`
 	Bio      string `json:"bio"`
 }
+
+func (User) TableName() string {
+	return "users"
+}
