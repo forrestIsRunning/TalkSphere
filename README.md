@@ -14,8 +14,55 @@ mysql环境
 ```bash
 docker-compose -p mysql -f /Users/Zhuanz/go/src/forrest/TalkSphere/backend/deploy/mysql-docker-compose.yaml up -d
 ```
+与数据库交互
 
+```bash
+➜  ~ docker ps -a | grep mysql
+ab9cdd12c62a   mysql:8.0              "docker-entrypoint.s…"   43 hours ago   Up 43 hours   0.0.0.0:3306->3306/tcp, 33060/tcp
 
+#进入docker容器
+➜  ~ docker exec -it ab9cdd12c62a sh
+
+#show databases
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| performance_schema |
+| talksphere         |
++--------------------+
+3 rows in set (0.01 sec)
+
+#change database
+mysql> use talksphere;
+Database changed
+
+mysql> select * from users \G
+*************************** 1. row ***************************
+        id: 1
+created_at: 2025-01-03 19:10:27.900
+updated_at: 2025-01-03 19:10:27.900
+deleted_at: NULL
+   user_id: 198927022297088
+  username: yansaitao
+  password: 3537313430307973742341bdf8249049c40e8e0ce7305e78e5471b
+     email: yansaitao@qq.com
+    avatar:
+       bio:
+*************************** 2. row ***************************
+        id: 2
+created_at: 2025-01-04 15:52:22.188
+updated_at: 2025-01-04 15:52:22.188
+deleted_at: NULL
+   user_id: 481263710375936
+  username: alice
+  password: 313233bdf8249049c40e8e0ce7305e78e5471b
+     email: email@gamil.com
+    avatar:
+       bio:
+2 rows in set (0.00 sec)
+```
 
 ## timeLine
 
@@ -28,4 +75,8 @@ docker-compose -p mysql -f /Users/Zhuanz/go/src/forrest/TalkSphere/backend/deplo
   - 实现用户头像上传，bio更新
   - 表结构设计；简化业务
   - fix 登陆后，跳转forum失败问题
-
+- 2025.1.5
+  - 表结构设计
+  - 业务功能设计
+  - 板块模块的CRUD
+  - 使用casbin完成 用户RBAC
