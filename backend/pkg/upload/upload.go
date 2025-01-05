@@ -55,5 +55,5 @@ func SaveAvatar(file *multipart.FileHeader, userID int64) (string, error) {
 		return "", err
 	}
 
-	return "/" + filepath, nil
+	return filepath, nil
 }

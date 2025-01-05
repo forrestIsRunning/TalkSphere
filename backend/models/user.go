@@ -1,17 +1,23 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+)
 
 type User struct {
-	gorm.Model
-	UserID   int64  `gorm:"not null"`
-	Username string `gorm:"unique;not null" json:"username"`
-	Password string `gorm:"not null" json:"-"`
-	Email    string `gorm:"unique" json:"email"`
-	Avatar   string `json:"avatar"`
-	Bio      string `json:"bio"`
+	ID           int64      `gorm:"primaryKey;autoIncrement"`
+	Username     string     `gorm:"type:varchar(50);unique;not null"`
+	Email        string     `gorm:"type:varchar(100);unique;not null"`
+	PasswordHash string     `gorm:"type:varchar(255);not null;column:password_hash"`
+	AvatarURL    string     `gorm:"type:varchar(255);column:avatar_url"`
+	Bio          string     `gorm:"type:text"`
+	CreatedAt    time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt    time.Time  `gorm:"default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"`
+	Status       int8       `gorm:"type:tinyint;default:1;comment:'1: active, 0: inactive'"`
+	LastLoginAt  *time.Time `gorm:"column:last_login_at"`
 }
 
+// TableName 指定表名
 func (User) TableName() string {
 	return "users"
 }

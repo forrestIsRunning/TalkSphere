@@ -45,15 +45,7 @@ type ProfileResponse struct {
 	Bio      string `json:"bio"`
 }
 
-// UpdateAvatarParams 更新头像的请求参数
-type UpdateAvatarParams struct {
-	Avatar string `json:"avatar" binding:"required"`
-}
-
 // TODO 未来对接邮箱注册
-// username
-// email
-// password
 
 func RegisterHandler(c *gin.Context) {
 	// 1. 获取参数和参数校验
@@ -78,14 +70,15 @@ func RegisterHandler(c *gin.Context) {
 
 	// 4. 创建用户
 	userID := snowflake.GenID()
-	//TODO 新用户默认xx头像
 	user = models.User{
-		UserID:   userID,
-		Username: params.Username,
-		Password: encrypt.EncryptPassword(params.Password),
-		Email:    params.Email,
-		//Avatar:   params.Avatar,
-		//Bio:      params.Bio,
+		ID:           userID,
+		Username:     params.Username,
+		PasswordHash: encrypt.EncryptPassword(params.Password),
+		Email:        params.Email,
+		AvatarURL:    setting.Conf.DefaultAvatar.AvatarURL,
+		Bio:          "no bio",
+		Status:       1,
+		LastLoginAt:  nil,
 	}
 
 	if err := mysql.DB.Create(&user).Error; err != nil {
@@ -93,7 +86,7 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	ResponseSuccess(c, nil)
+	ResponseSuccess(c, user)
 }
 
 func LoginHandler(c *gin.Context) {
@@ -113,13 +106,13 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 3. 验证密码
-	if encrypt.EncryptPassword(params.Password) != user.Password {
+	if encrypt.EncryptPassword(params.Password) != user.PasswordHash {
 		ResponseError(c, CodeInvalidPassword)
 		return
 	}
 
 	// 4. 生成Token
-	token, err := jwt.GenToken(user.UserID, user.Username)
+	token, err := jwt.GenToken(user.ID, user.Username)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -127,7 +120,7 @@ func LoginHandler(c *gin.Context) {
 
 	ResponseSuccess(c, gin.H{
 		"token":    "Bearer " + token,
-		"user_id":  user.UserID,
+		"userID":   user.ID,
 		"username": user.Username,
 	})
 }
@@ -150,7 +143,7 @@ func UpdateUserBio(c *gin.Context) {
 
 	// 检查用户是否存在
 	var user models.User
-	result := mysql.DB.Where("user_id = ?", userID.(string)).First(&user)
+	result := mysql.DB.Where("id = ?", userID.(string)).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -161,7 +154,7 @@ func UpdateUserBio(c *gin.Context) {
 	}
 
 	// 更新bio
-	result = mysql.DB.Model(&user).Where("user_id = ?", userID.(string)).Update("bio", params.Bio)
+	result = mysql.DB.Model(&user).Where("id = ?", userID.(string)).Update("bio", params.Bio)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -180,7 +173,6 @@ func UpdateUserAvatar(c *gin.Context) {
 		return
 	}
 
-	// 获取当前用户ID
 	userID, ok := c.Get("userID")
 	if !ok {
 		ResponseError(c, CodeNeedLogin)
@@ -217,15 +209,16 @@ func UpdateUserAvatar(c *gin.Context) {
 
 	// 更新用户头像URL
 	var user models.User
-	result := mysql.DB.Model(&user).Where("user_id = ?", userID.(int64)).Update("avatar", avatarURL)
+	result := mysql.DB.Model(&user).Where("id = ?", userID.(int64)).Update("avatar_url", avatarURL)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
 	// 删除临时文件
-	os.Remove(tmpPath)
-
+	go func() {
+		os.Remove(tmpPath)
+	}()
 	ResponseSuccess(c, gin.H{
 		"avatar_url": avatarURL,
 	})
@@ -251,7 +244,7 @@ func GetUserProfile(c *gin.Context) {
 
 	// 查询用户信息
 	var user models.User
-	result := mysql.DB.Where("user_id = ?", userID).First(&user)
+	result := mysql.DB.Where("id = ?", userID).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -263,10 +256,10 @@ func GetUserProfile(c *gin.Context) {
 
 	// 构造响应数据
 	response := ProfileResponse{
-		UserID:   user.UserID,
+		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
-		Avatar:   user.Avatar,
+		Avatar:   user.AvatarURL,
 		Bio:      user.Bio,
 	}
 

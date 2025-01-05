@@ -5,14 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserInit(r *gin.Engine) {
-	auth := r.Group("/api")
+func RegisterUserRoutes(r *gin.Engine) {
 	//用户登陆注册
-	auth.POST("/register", controller.RegisterHandler)
-	auth.POST("/login", controller.LoginHandler)
+	r.POST("/register", controller.RegisterHandler)
+	r.POST("/login", controller.LoginHandler)
 
 	//用户信息
-	auth.GET("/profile", controller.GetUserProfile)
-	auth.POST("/profile", controller.UpdateUserBio)
-	auth.POST("/avatar", controller.UpdateUserAvatar)
+	r.GET("/profile/:id", controller.GetUserProfile)
+	r.POST("/bio", controller.UpdateUserBio)
+	r.POST("/avatar", controller.UpdateUserAvatar)
 }
