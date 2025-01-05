@@ -45,3 +45,6 @@ oss:
   region: "ap-beijing"
   secret_id: "AKIDtfEZheOuCG8pLdlgOs9E5jARWO5LSL1T"
   secret_key: "HLCqGTSFpHTUHrFPQRGsGRRFrHUTO9j6"
+
+default_avatar:
+  avatar_url: "https://talkspere-1321722407.cos.ap-beijing.myqcloud.com/defaultAvatar.jpg"

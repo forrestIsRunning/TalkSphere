@@ -19,6 +19,7 @@ type Config struct {
 	*EncryptConfig   `mapstructure:"encrypt"`
 	*AuthConfig      `mapstructure:"auth"`
 	*OSSConfig       `mapstructure:"oss"`
+	*DefaultAvatar   `mapstructure:"default_avatar"`
 }
 
 type AppConfig struct {
@@ -76,6 +77,10 @@ type OSSConfig struct {
 	Region     string `mapstructure:"region"`
 	SecretID   string `mapstructure:"secret_id"`
 	SecretKey  string `mapstructure:"secret_key"`
+}
+
+type DefaultAvatar struct {
+	AvatarURL string `mapstructure:"avatar_url"`
 }
 
 func Init() (err error) {
