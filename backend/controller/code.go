@@ -12,6 +12,8 @@ const (
 	CodeEmailExist
 	CodeNeedLogin
 	CodeInvalidToken
+	CodeNoPermision
+	CodePostNotExist
 )
 
 var codeMsgMap = map[ResCode]string{
@@ -24,6 +26,8 @@ var codeMsgMap = map[ResCode]string{
 	CodeEmailExist:      "邮箱已存在",
 	CodeNeedLogin:       "需要登录",
 	CodeInvalidToken:    "无效的 token",
+	CodeNoPermision:     "权限不足",
+	CodePostNotExist:    "帖子不存在",
 }
 
 func (rc ResCode) Msg() string {

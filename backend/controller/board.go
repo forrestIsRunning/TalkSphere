@@ -18,7 +18,7 @@ func CreateBoard(c *gin.Context) {
 		return
 	}
 	//TODO middleware实现RBAC身份验证
-	userID, exists := c.Get("userID")
+	userID, exists := c.Get(CtxtUserID)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return

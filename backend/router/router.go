@@ -27,6 +27,6 @@ func Setup() *gin.Engine {
 
 	RegisterUserRoutes(r)
 	RegisterBoardRoutes(r)
-
+	InitPostRouter(r)
 	return r
 }

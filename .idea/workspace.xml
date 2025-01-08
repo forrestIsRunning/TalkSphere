@@ -4,15 +4,20 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28546808-a64a-4a83-9f7e-b6b49bea24a9" name="Changes" comment="实现CORS">
+    <list default="true" id="28546808-a64a-4a83-9f7e-b6b49bea24a9" name="Changes" comment="update .gitignore">
+      <change afterPath="$PROJECT_DIR$/backend/controller/post.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/models/post.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/router/post.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-interface-specification.md" beforeDir="false" afterPath="$PROJECT_DIR$/api-interface-specification.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/controller/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/request.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller/board.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/board.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller/code.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/code.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/controller/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/middlewares/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middlewares/jwt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/deploy/.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/deploy/.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middleware/jwt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/oss.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middleware/oss.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/ratelimit.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middleware/ratelimit.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/upload/upload.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/upload/upload.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/router.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/router/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/user.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -129,7 +134,10 @@
     <MESSAGE value="移除前端css、js、html文件" />
     <MESSAGE value="实现板块的CRUD功能&amp;&amp;fix 头像更新和bio更新接口" />
     <MESSAGE value="实现CORS" />
-    <option name="LAST_COMMIT_MESSAGE" value="实现CORS" />
+    <MESSAGE value="update ctx" />
+    <MESSAGE value="delete static pic" />
+    <MESSAGE value="update .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="update .gitignore" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

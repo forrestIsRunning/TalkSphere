@@ -5,16 +5,9 @@ import (
 	"TalkSphere/models"
 	"TalkSphere/pkg/encrypt"
 	"TalkSphere/pkg/jwt"
-	"TalkSphere/pkg/oss"
 	"TalkSphere/pkg/snowflake"
 	"TalkSphere/pkg/upload"
 	"TalkSphere/setting"
-	"context"
-	"fmt"
-	"os"
-	"path"
-	"time"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -179,33 +172,11 @@ func UpdateUserAvatar(c *gin.Context) {
 		return
 	}
 
-	// 先保存到临时目录
-	tmpPath, err := upload.SaveAvatar(file, userID.(int64))
+	avatarURL, err := upload.SaveImageToOSS(file, "avatar", userID.(int64))
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
 	}
-
-	// 上传到腾讯云 OSS
-	objectKey := fmt.Sprintf("avatars/%d_%d%s", userID.(int64), time.Now().Unix(), path.Ext(file.Filename))
-
-	// 打开临时文件
-	f, err := os.Open(tmpPath)
-	if err != nil {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	defer f.Close()
-
-	// 上传到 COS
-	_, err = oss.Client.Object.Put(context.Background(), objectKey, f, nil)
-	if err != nil {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-
-	// 生成访问URL
-	avatarURL := fmt.Sprintf("https://%s.cos.%s.myqcloud.com/%s", setting.Conf.OSSConfig.BucketName, setting.Conf.OSSConfig.Region, objectKey)
 
 	// 更新用户头像URL
 	var user models.User
@@ -215,10 +186,6 @@ func UpdateUserAvatar(c *gin.Context) {
 		return
 	}
 
-	// 删除临时文件
-	go func() {
-		os.Remove(tmpPath)
-	}()
 	ResponseSuccess(c, gin.H{
 		"avatar_url": avatarURL,
 	})
