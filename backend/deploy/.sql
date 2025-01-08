@@ -1,3 +1,10 @@
+-- 设置数据库字符集
+CREATE DATABASE IF NOT EXISTS talksphere
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE talksphere;
+
 -- 用户表
 CREATE TABLE users (
                        id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -10,7 +17,7 @@ CREATE TABLE users (
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                        status TINYINT DEFAULT 1 COMMENT '1: active, 0: inactive',
                        last_login_at TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Casbin 规则表
 CREATE TABLE casbin_rule (
@@ -23,7 +30,7 @@ CREATE TABLE casbin_rule (
                              v4 VARCHAR(255),
                              v5 VARCHAR(255),
                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 板块表
 CREATE TABLE boards (
@@ -35,7 +42,7 @@ CREATE TABLE boards (
                         status TINYINT DEFAULT 1 COMMENT '1: active, 0: inactive',
                         sort_order INT DEFAULT 0,
                         creator_id BIGINT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 帖子表
 CREATE TABLE posts (
@@ -52,32 +59,36 @@ CREATE TABLE posts (
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                        status TINYINT DEFAULT 1 COMMENT '1: published, 0: draft, -1: deleted',
                        FULLTEXT KEY idx_post_search (title, content)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 帖子图片表
 CREATE TABLE post_images (
                              id BIGINT PRIMARY KEY AUTO_INCREMENT,
                              post_id BIGINT,
+                             user_id BIGINT NOT NULL,
                              image_url VARCHAR(255) NOT NULL,
+                             status TINYINT DEFAULT 1,
                              sort_order INT DEFAULT 0,
-                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                             INDEX idx_post_id (post_id),
+                             INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 标签表
 CREATE TABLE tags (
                       id BIGINT PRIMARY KEY AUTO_INCREMENT,
                       name VARCHAR(50) UNIQUE NOT NULL,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 帖子标签关联表
 CREATE TABLE post_tags (
                            post_id BIGINT,
                            tag_id BIGINT,
                            PRIMARY KEY (post_id, tag_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 评论表 (树形结构)
+-- 评论表
 CREATE TABLE comments (
                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
                           post_id BIGINT,
@@ -88,9 +99,9 @@ CREATE TABLE comments (
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                           status TINYINT DEFAULT 1 COMMENT '1: visible, 0: hidden'
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 点赞表 (可同时用于帖子和评论的点赞)
+-- 点赞表
 CREATE TABLE likes (
                        id BIGINT PRIMARY KEY AUTO_INCREMENT,
                        user_id BIGINT,
@@ -98,7 +109,7 @@ CREATE TABLE likes (
                        target_type TINYINT COMMENT '1: post, 2: comment',
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        UNIQUE KEY unique_like (user_id, target_id, target_type)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 收藏表
 CREATE TABLE favorites (
@@ -107,9 +118,9 @@ CREATE TABLE favorites (
                            post_id BIGINT,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            UNIQUE KEY unique_favorite (user_id, post_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 用户活跃度统计表 (用于数据分析)
+-- 用户活跃度统计表
 CREATE TABLE user_activities (
                                  id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                  user_id BIGINT,
@@ -119,7 +130,7 @@ CREATE TABLE user_activities (
                                  like_count INT DEFAULT 0,
                                  view_count INT DEFAULT 0,
                                  UNIQUE KEY unique_user_daily (user_id, date)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建必要的索引
 CREATE INDEX idx_posts_board ON posts(board_id);
