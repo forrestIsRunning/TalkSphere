@@ -129,13 +129,13 @@ func LoginHandler(c *gin.Context) {
 func UpdateUserBio(c *gin.Context) {
 	// 获取参数
 	var params UpdateProfileParams
-	if err := c.ShouldBindJSON(&params); err != nil { // 注意这里要传入指针
+	if err := c.ShouldBindJSON(&params); err != nil {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 
 	// 获取当前用户ID
-	userID, ok := c.Get("userID")
+	userID, ok := c.Get(CtxtUserID)
 	if !ok {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -143,7 +143,7 @@ func UpdateUserBio(c *gin.Context) {
 
 	// 检查用户是否存在
 	var user models.User
-	result := mysql.DB.Where("id = ?", userID.(string)).First(&user)
+	result := mysql.DB.Where("id = ?", userID.(int64)).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -154,7 +154,7 @@ func UpdateUserBio(c *gin.Context) {
 	}
 
 	// 更新bio
-	result = mysql.DB.Model(&user).Where("id = ?", userID.(string)).Update("bio", params.Bio)
+	result = mysql.DB.Model(&user).Where("id = ?", userID.(int64)).Update("bio", params.Bio)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -173,7 +173,7 @@ func UpdateUserAvatar(c *gin.Context) {
 		return
 	}
 
-	userID, ok := c.Get("userID")
+	userID, ok := c.Get(CtxtUserID)
 	if !ok {
 		ResponseError(c, CodeNeedLogin)
 		return
@@ -226,21 +226,12 @@ func UpdateUserAvatar(c *gin.Context) {
 
 // GetUserProfile 获取用户详情
 func GetUserProfile(c *gin.Context) {
-	// 获取用户ID参数
-	userIDStr := c.Param("id") // 从URL参数获取
-	var userID interface{}
-
-	if userIDStr == "" {
-		// 如果URL中没有ID，则获取当前登录用户的ID
-		var ok bool
-		userID, ok = c.Get("userID")
-		if !ok {
-			ResponseError(c, CodeNeedLogin)
-			return
-		}
-	} else {
-		userID = userIDStr
+	userID, ok := c.Get(CtxtUserID)
+	if !ok {
+		ResponseError(c, CodeNeedLogin)
+		return
 	}
+	userID = userID.(int64)
 
 	// 查询用户信息
 	var user models.User
@@ -254,7 +245,6 @@ func GetUserProfile(c *gin.Context) {
 		return
 	}
 
-	// 构造响应数据
 	response := ProfileResponse{
 		UserID:   user.ID,
 		Username: user.Username,

@@ -1,68 +1,40 @@
 package middlewares
 
 import (
+	"TalkSphere/controller"
 	"TalkSphere/pkg/jwt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// JWTAuthMiddleware 基于JWT的认证中间件
-func JWTAuthMiddleware() gin.HandlerFunc {
+func JWTAuthMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		// 获取 Authorization header
-		authHeader := c.GetHeader("Authorization")
+		// 客户端携带 Token 的三种方式：1. 放在请求头 2. 放在请求体 3. 放在 URI
+		// 这里假设 Token 放在 Header 的 Authorization 中，并使用 Bearer 开头
+		// Authorization: Bearer xxx.xxx.xxx
+		authHeader := c.Request.Header.Get("Authorization")
 		if authHeader == "" {
-			// 对于API请求返回JSON错误
-			if strings.HasPrefix(c.Request.URL.Path, "/api/") {
-				c.JSON(200, gin.H{
-					"code": 2003,
-					"msg":  "需要登录",
-				})
-				c.Abort()
-				return
-			}
-			// 对于页面请求重定向到登录页
-			c.Redirect(302, "/")
+			controller.ResponseError(c, controller.CodeNeedLogin)
 			c.Abort()
 			return
 		}
-
-		// 检查 Authorization 格式
+		// 按空格切割
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			if strings.HasPrefix(c.Request.URL.Path, "/api/") {
-				c.JSON(200, gin.H{
-					"code": 2003,
-					"msg":  "无效的认证格式",
-				})
-				c.Abort()
-				return
-			}
-			c.Redirect(302, "/")
+			controller.ResponseError(c, controller.CodeInvalidToken)
 			c.Abort()
 			return
 		}
-
-		// 解析 Token
+		// parts[1] 是获取的 tokenString, 我们使用之前定义好的解析 JWT 的函数来解析它
 		mc, err := jwt.ParseToken(parts[1])
 		if err != nil {
-			if strings.HasPrefix(c.Request.URL.Path, "/api/") {
-				c.JSON(200, gin.H{
-					"code": 2003,
-					"msg":  "无效的Token",
-				})
-				c.Abort()
-				return
-			}
-			c.Redirect(302, "/")
+			controller.ResponseError(c, controller.CodeInvalidToken)
 			c.Abort()
 			return
 		}
-
-		// 将当前请求的 userID 信息保存到请求的上下文c上
-		c.Set("userID", mc.UserID)
-		c.Set("username", mc.Username)
+		c.Set(controller.CtxtUserID, mc.UserID)
+		c.Set(controller.CtxUserName, mc.Username)
 		c.Next()
 	}
 }

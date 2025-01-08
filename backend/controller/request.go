@@ -6,13 +6,14 @@ import (
 	"strconv"
 )
 
-const CtxtUserIDKey = "userID"
+const CtxtUserID = "userID"
+const CtxUserName = "userName"
 
 var ErrorUserNotLogin = errors.New("用户未登录")
 
 // getCurrentUserID 获取当前登录的用户 ID
 func getCurrentUserID(c *gin.Context) (userID int64, err error) {
-	uid, ok := c.Get(CtxtUserIDKey)
+	uid, ok := c.Get(CtxtUserID)
 	if !ok {
 		err = ErrorUserNotLogin
 		return

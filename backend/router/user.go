@@ -2,6 +2,8 @@ package router
 
 import (
 	"TalkSphere/controller"
+	"TalkSphere/middlewares"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,7 +13,9 @@ func RegisterUserRoutes(r *gin.Engine) {
 	r.POST("/login", controller.LoginHandler)
 
 	//用户信息
-	r.GET("/profile/:id", controller.GetUserProfile)
-	r.POST("/bio", controller.UpdateUserBio)
-	r.POST("/avatar", controller.UpdateUserAvatar)
+	auth := r.Use(middlewares.JWTAuthMiddleware())
+	auth.GET("/profile", controller.GetUserProfile)
+	auth.GET("/profile/:id", controller.GetUserProfile)
+	auth.POST("/bio", controller.UpdateUserBio)
+	auth.POST("/avatar", controller.UpdateUserAvatar)
 }
