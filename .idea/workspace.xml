@@ -4,16 +4,20 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="after kubebuilder create api --group ship --version v1beta1 --kind Frigate">
-      <change beforePath="$PROJECT_DIR$/.idea/codeCollection.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="构建用户发表帖子前端页面">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/controller/board.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/board.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/router/board.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/board.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/router.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/router/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller/post.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/post.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/post.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/post.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/api/post.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/post.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/api/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/user.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/main.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/router/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/router/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/views/Home.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/Home.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,7 +130,9 @@
     <MESSAGE value="add client-go examples" />
     <MESSAGE value="add: kubebuilder init project" />
     <MESSAGE value="after kubebuilder create api --group ship --version v1beta1 --kind Frigate" />
-    <option name="LAST_COMMIT_MESSAGE" value="after kubebuilder create api --group ship --version v1beta1 --kind Frigate" />
+    <MESSAGE value="bug fix: 修复 将JWT Middleware加入全剧错误" />
+    <MESSAGE value="构建用户发表帖子前端页面" />
+    <option name="LAST_COMMIT_MESSAGE" value="构建用户发表帖子前端页面" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

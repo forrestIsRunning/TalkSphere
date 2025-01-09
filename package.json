@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "dayjs": "^1.11.13",
     "element-plus": "^2.9.2"
   }
 }

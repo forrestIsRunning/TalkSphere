@@ -5,6 +5,7 @@ import (
 	"TalkSphere/models"
 	"TalkSphere/pkg/upload"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -183,7 +184,6 @@ func GetPostDetail(c *gin.Context) {
 		Tags          []models.Tag `json:"tags"`
 		ImageURLs     []string     `json:"image_urls"`
 	}
-
 	response := PostResponse{
 		ID:            post.ID,
 		Title:         post.Title,
@@ -215,6 +215,8 @@ func GetPostDetail(c *gin.Context) {
 				zap.Error(err))
 		}
 	}()
+
+	fmt.Println(response)
 
 	ResponseSuccess(c, response)
 }
@@ -408,9 +410,19 @@ func GetBoardPosts(c *gin.Context) {
 	var posts []models.Post
 	var total int64
 
-	db := mysql.DB.Model(&models.Post{}).Where("board_id = ? AND status != -1", boardID)
+	// 修改查询,使用正确的字段名 avatar_url
+	db := mysql.DB.Model(&models.Post{}).
+		Joins("LEFT JOIN users ON posts.author_id = users.id").
+		Where("posts.board_id = ? AND posts.status != -1", boardID)
+
 	db.Count(&total)
-	if err := db.Preload("Tags").Offset(int((page - 1) * size)).Limit(int(size)).Find(&posts).Error; err != nil {
+
+	if err := db.Preload("Author").
+		Preload("Tags").
+		Select("posts.*, users.username as author_username, users.avatar_url as author_avatar_url").
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Find(&posts).Error; err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
 	}

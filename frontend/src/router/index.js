@@ -7,6 +7,7 @@ import store from '../store'
 import { getUserProfile } from '../api/user'
 
 import CreatePost from '../views/CreatePost.vue'
+import PostDetail from '../views/PostDetail.vue'
 
 const routes = [
   {
@@ -35,6 +36,12 @@ const routes = [
     path: '/post/create',
     name: 'CreatePost',
     component: CreatePost,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/post/:id',
+    name: 'PostDetail',
+    component: PostDetail,
     meta: { requiresAuth: true }
   }
 ]

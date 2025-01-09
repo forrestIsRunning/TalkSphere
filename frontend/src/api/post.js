@@ -26,11 +26,14 @@ export function getUserPosts(userId, params) {
   })
 }
 
-// 获取板块帖子列表
+// 获取板块下的帖子列表
 export function getBoardPosts(boardId, params) {
   return request({
     url: `/posts/board/${boardId}`,
     method: 'get',
-    params
+    params: {
+      page: params.page,
+      size: params.size
+    }
   })
 }
