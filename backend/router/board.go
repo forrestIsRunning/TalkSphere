@@ -2,12 +2,24 @@ package router
 
 import (
 	"TalkSphere/controller"
+	"TalkSphere/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterBoardRoutes(r *gin.Engine) {
-	r.GET("/boards", controller.GetAllBoards)
-	r.POST("/boards", controller.CreateBoard)
-	r.DELETE("/boards/:id", controller.DeleteBoard)
-	r.PUT("/boards/:id", controller.UpdateBoard)
+func InitBoardRouter(r *gin.Engine) {
+	// 公开接口 - 不需要登录
+	publicGroup := r.Group("/boards")
+	{
+		publicGroup.GET("", controller.GetAllBoards) // 获取板块列表不需要登录
+	}
+
+	// 需要登录的接口
+	authGroup := r.Group("/boards")
+	authGroup.Use(middleware.JWTAuthMiddleware())
+	{
+		authGroup.POST("", controller.CreateBoard)       // 创建板块需要登录
+		authGroup.PUT("/:id", controller.UpdateBoard)    // 更新板块需要登录
+		authGroup.DELETE("/:id", controller.DeleteBoard) // 删除板块需要登录
+	}
 }

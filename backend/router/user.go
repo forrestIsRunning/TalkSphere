@@ -8,14 +8,17 @@ import (
 )
 
 func RegisterUserRoutes(r *gin.Engine) {
-	//用户登陆注册
+	// 公开路由 - 不需要登录
 	r.POST("/register", controller.RegisterHandler)
 	r.POST("/login", controller.LoginHandler)
 
-	//用户信息
-	auth := r.Use(middleware.JWTAuthMiddleware())
-	auth.GET("/profile", controller.GetUserProfile)
-	auth.GET("/profile/:id", controller.GetUserProfile)
-	auth.POST("/bio", controller.UpdateUserBio)
-	auth.POST("/avatar", controller.UpdateUserAvatar)
+	// 需要登录的路由 - 使用路由组
+	authGroup := r.Group("")
+	authGroup.Use(middleware.JWTAuthMiddleware())
+	{
+		authGroup.GET("/profile", controller.GetUserProfile)
+		authGroup.GET("/profile/:id", controller.GetUserProfile)
+		authGroup.POST("/bio", controller.UpdateUserBio)
+		authGroup.POST("/avatar", controller.UpdateUserAvatar)
+	}
 }

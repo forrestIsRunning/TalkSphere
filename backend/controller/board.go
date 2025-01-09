@@ -2,6 +2,7 @@ package controller
 
 import (
 	"TalkSphere/dao/mysql"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
@@ -76,11 +77,11 @@ func UpdateBoard(c *gin.Context) {
 func GetAllBoards(c *gin.Context) {
 	var boards []models.Board
 	if err := mysql.DB.Find(&boards).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ResponseError(c, CodeServerBusy)
 		return
 	}
-
-	c.JSON(http.StatusOK, boards)
+	zap.L().Info("boards", zap.Any("boards", boards))
+	ResponseSuccess(c, boards)
 }
 
 //middleware TODO 用户是否为管理员权限认证
