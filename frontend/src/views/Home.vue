@@ -7,6 +7,12 @@
           <h1 class="logo">TalkSphere</h1>
         </div>
         <div class="right">
+          <el-button 
+            type="primary" 
+            @click="$router.push('/create-post')"
+          >
+            发表帖子
+          </el-button>
           <div class="user-info" v-if="userInfo">
             <el-dropdown trigger="click">
               <el-avatar 
@@ -42,10 +48,18 @@
 
       <!-- 右侧内容区 -->
       <div class="content-area">
-        <!-- 当前板块信息 -->
-        <div class="board-header" v-if="currentBoardName">
-          <h2>{{ currentBoardName }}</h2>
+        <!-- 欢迎信息 -->
+        <div v-if="!selectedBoardId" class="welcome-message">
+          <h2>欢迎来到 TalkSphere</h2>
+          <p>请从左侧选择一个板块开始浏览</p>
         </div>
+
+        <!-- 当前板块信息 -->
+        <template v-else>
+          <div class="board-header" v-if="currentBoardName">
+            <h2>{{ currentBoardName }}</h2>
+          </div>
+        </template>
 
         <!-- 帖子列表 -->
         <div class="post-list">
@@ -217,9 +231,12 @@ export default {
       router.push('/login')
     }
 
-    onMounted(() => {
-      loadBoards()
-      loadPosts()
+    onMounted(async () => {
+      await loadBoards()
+      // 如果有板块数据，自动选择第一个板块
+      if (boards.value.length > 0) {
+        selectBoard(boards.value[0].ID)
+      }
     })
 
     return {
@@ -485,5 +502,21 @@ export default {
   margin: 0;
   font-size: 20px;
   color: #1d2129;
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 100px 0;
+}
+
+.welcome-message h2 {
+  color: #1e80ff;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.welcome-message p {
+  color: #86909c;
+  font-size: 16px;
 }
 </style> 
