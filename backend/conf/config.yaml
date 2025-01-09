@@ -38,7 +38,7 @@ snowflake:
   machine_id: 1
 
 auth:
-  jwt_expire: 8760
+  jwt_expire: 87600
 
 oss:
   bucket_name: "talkspere-1321722407"

@@ -1,0 +1,513 @@
+basePath: /api/v1
+definitions:
+  controller.CreateCommentRequest:
+    properties:
+      content:
+        description: 评论内容
+        example: 这是一条评论
+        type: string
+      parent_id:
+        description: 父评论ID，顶级评论为null
+        example: 0
+        type: integer
+      post_id:
+        description: 帖子ID
+        example: 1
+        type: integer
+    required:
+    - content
+    - post_id
+    type: object
+  controller.LikeRequest:
+    properties:
+      target_id:
+        type: integer
+      target_type:
+        description: 1:post, 2:comment
+        enum:
+        - 1
+        - 2
+        type: integer
+    required:
+    - target_id
+    - target_type
+    type: object
+  controller.ResCode:
+    enum:
+    - 1000
+    - 1001
+    - 1002
+    - 1003
+    - 1004
+    - 1005
+    - 1006
+    - 1007
+    - 1008
+    - 1009
+    - 1010
+    - 1011
+    type: integer
+    x-enum-varnames:
+    - CodeSuccess
+    - CodeInvalidParam
+    - CodeUserExist
+    - CodeUserNotExist
+    - CodeInvalidPassword
+    - CodeServerBusy
+    - CodeEmailExist
+    - CodeNeedLogin
+    - CodeInvalidToken
+    - CodeNoPermision
+    - CodePostNotExist
+    - CodeCommentNotExist
+  controller.Response:
+    properties:
+      code:
+        allOf:
+        - $ref: '#/definitions/controller.ResCode'
+        description: 业务响应状态码
+      data:
+        description: 数据
+      msg:
+        description: 提示信息
+        type: string
+    type: object
+  models.Comment:
+    properties:
+      children:
+        description: 非数据库字段
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      parent_id:
+        description: 父评论ID，顶级评论为 null
+        type: integer
+      post_id:
+        type: integer
+      root_id:
+        description: 根评论ID，顶级评论为 null
+        type: integer
+      score:
+        type: integer
+      status:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: integer
+    type: object
+  models.Favorite:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      post:
+        $ref: '#/definitions/models.Post'
+      post_id:
+        type: integer
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: 关联字段
+      user_id:
+        type: integer
+    type: object
+  models.Post:
+    properties:
+      authorID:
+        type: integer
+      boardID:
+        type: integer
+      commentCount:
+        type: integer
+      content:
+        type: string
+      createdAt:
+        type: string
+      favoriteCount:
+        type: integer
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/models.PostImage'
+        type: array
+      likeCount:
+        type: integer
+      status:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/models.Tag'
+        type: array
+      title:
+        type: string
+      updatedAt:
+        type: string
+      viewCount:
+        type: integer
+    type: object
+  models.PostImage:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      imageURL:
+        type: string
+      postID:
+        type: integer
+      sortOrder:
+        type: integer
+      status:
+        type: integer
+      userID:
+        type: integer
+    type: object
+  models.Tag:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      posts:
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
+    type: object
+  models.User:
+    properties:
+      avatarURL:
+        type: string
+      bio:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      lastLoginAt:
+        type: string
+      passwordHash:
+        type: string
+      status:
+        type: integer
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8989
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: TalkSphere 论坛系统 API 文档
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: TalkSphere API
+  version: "1.0"
+paths:
+  /comments:
+    post:
+      consumes:
+      - application/json
+      description: 创建一条新评论，支持回复其他评论
+      parameters:
+      - description: Bearer 用户令牌
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 评论信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Comment'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+      summary: 创建评论
+      tags:
+      - 评论
+  /comments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定评论及其子评论
+      parameters:
+      - description: Bearer 用户令牌
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 评论ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+      summary: 删除评论
+      tags:
+      - 评论
+  /comments/post/{post_id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定帖子的评论列表，支持分页和排序
+      parameters:
+      - description: 帖子ID
+        in: path
+        name: post_id
+        required: true
+        type: integer
+      - default: 1
+        description: 页码，默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量，默认10
+        in: query
+        name: size
+        type: integer
+      - default: hot
+        description: 排序方式：hot(热门)、new(最新)、top(最佳)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Comment'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+      summary: 获取帖子评论列表
+      tags:
+      - 评论
+  /favorites:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的收藏帖子列表
+      parameters:
+      - description: Bearer 用户令牌
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: 页码，默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量，默认10
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Favorite'
+                  type: array
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+      summary: 获取用户收藏列表
+      tags:
+      - 收藏
+  /favorites/post/{post_id}:
+    post:
+      consumes:
+      - application/json
+      description: 收藏或取消收藏指定帖子
+      parameters:
+      - description: Bearer 用户令牌
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 帖子ID
+        in: path
+        name: post_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功，返回favorited或unfavorited
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "404":
+          description: 帖子不存在
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+      summary: 收藏/取消收藏帖子
+      tags:
+      - 收藏
+  /likes:
+    post:
+      consumes:
+      - application/json
+      description: 对帖子或评论进行点赞/取消点赞操作
+      parameters:
+      - description: Bearer 用户令牌
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 点赞信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.LikeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功，返回liked或unliked
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/controller.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/controller.Response'
+      summary: 点赞/取消点赞
+      tags:
+      - 点赞
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
