@@ -6,6 +6,8 @@ import UserProfile from '../views/UserProfile.vue'
 import store from '../store'
 import { getUserProfile } from '../api/user'
 
+import CreatePost from '../views/CreatePost.vue'
+
 const routes = [
   {
     path: '/',
@@ -27,6 +29,12 @@ const routes = [
     path: '/profile',
     name: 'UserProfile',
     component: UserProfile,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/post/create',
+    name: 'CreatePost',
+    component: CreatePost,
     meta: { requiresAuth: true }
   }
 ]
