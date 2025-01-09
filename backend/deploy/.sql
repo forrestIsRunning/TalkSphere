@@ -91,15 +91,30 @@ CREATE TABLE post_tags (
 -- 评论表
 CREATE TABLE comments (
                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          post_id BIGINT,
-                          user_id BIGINT,
-                          content TEXT NOT NULL,
-                          parent_id BIGINT COMMENT '父评论ID，顶级评论为NULL',
-                          like_count INT DEFAULT 0,
-                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                          status TINYINT DEFAULT 1 COMMENT '1: visible, 0: hidden'
+                          post_id BIGINT NOT NULL COMMENT '帖子ID',
+                          user_id BIGINT NOT NULL COMMENT '评论作者ID',
+                          content TEXT NOT NULL COMMENT '评论内容',
+                          parent_id BIGINT DEFAULT NULL COMMENT '父评论ID，顶级评论为NULL',
+                          root_id BIGINT DEFAULT NULL COMMENT '根评论ID，顶级评论为NULL',
+                          like_count INT DEFAULT 0 COMMENT '点赞数',
+                          reply_count INT DEFAULT 0 COMMENT '回复数',
+                          score INT DEFAULT 0 COMMENT '评论得分(用于排序)',
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                          status TINYINT DEFAULT 1 COMMENT '状态：1正常 0隐藏 -1删除',
+                          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                          FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE,
+                          FOREIGN KEY (root_id) REFERENCES comments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 创建索引
+CREATE INDEX idx_comments_post_id ON comments(post_id);
+CREATE INDEX idx_comments_user_id ON comments(user_id);
+CREATE INDEX idx_comments_parent_id ON comments(parent_id);
+CREATE INDEX idx_comments_root_id ON comments(root_id);
+CREATE INDEX idx_comments_created_at ON comments(created_at);
+CREATE INDEX idx_comments_score ON comments(score);
 
 -- 点赞表
 CREATE TABLE likes (
