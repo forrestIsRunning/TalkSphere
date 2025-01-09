@@ -3,6 +3,8 @@ package router
 import (
 	"TalkSphere/pkg/logger"
 	"TalkSphere/setting"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"time"
 
@@ -25,8 +27,11 @@ func Setup() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// 添加 swagger 路由
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	RegisterUserRoutes(r)
 	RegisterBoardRoutes(r)
 	InitPostRouter(r)
+	InitInteractionRoutes(r)
 	return r
 }

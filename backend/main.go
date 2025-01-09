@@ -2,6 +2,7 @@ package main
 
 import (
 	"TalkSphere/dao/mysql"
+	_ "TalkSphere/docs" // swagger docs
 	"TalkSphere/pkg/logger"
 	"TalkSphere/pkg/oss"
 	"TalkSphere/pkg/snowflake"
@@ -19,10 +20,28 @@ import (
 	"go.uber.org/zap"
 )
 
+// @title TalkSphere API
+// @version 1.0
+// @description TalkSphere 论坛系统 API 文档
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8989
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
 func main() {
 	//1.config init
 	if err := setting.Init(); err != nil {
-		fmt.Printf("init settings failed, err:%v\n", err)
+		fmt.Printf("init setting failed, err:%v\n", err)
 		return
 	}
 	//2.logger init
