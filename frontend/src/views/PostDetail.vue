@@ -24,12 +24,8 @@
 
       <!-- 帖子统计信息 -->
       <div class="post-stats">
-        <span class="stat-item">
-          <el-icon><View /></el-icon>
-          阅读 {{ post.view_count || 0 }}
-        </span>
-        <span class="stat-item">
-          <el-icon><Star /></el-icon>
+        <span class="stat-item" @click="handleLike">
+          <el-icon :class="{ 'liked': isLiked }"><Star /></el-icon>
           点赞 {{ post.like_count || 0 }}
         </span>
         <span class="stat-item">
@@ -92,8 +88,8 @@
             <span class="reply-btn" @click="showReplyInput(comment.id)">
               回复
             </span>
-            <span class="like-count">
-              <el-icon><Star /></el-icon>
+            <span class="like-btn" @click="handleCommentLike(comment.id)">
+              <el-icon :class="{ 'liked': comment.isLiked }"><Star /></el-icon>
               {{ comment.like_count }}
             </span>
             <span class="reply-count">
@@ -140,13 +136,13 @@ import { getPostDetail } from '../api/post'
 import { getPostComments, createComment } from '../api/comment'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import { View, Star, ChatLineRound } from '@element-plus/icons-vue'
+import { Star, ChatLineRound } from '@element-plus/icons-vue'
 import { getUserById } from '../api/user'
+import { toggleLike, getLikeStatus } from '../api/like'
 
 export default {
   name: 'PostDetail',
   components: {
-    View,
     Star,
     ChatLineRound
   },
@@ -160,6 +156,7 @@ export default {
     const replyingTo = ref(null)
     const submitting = ref(false)
     const authorName = ref('加载中...')
+    const isLiked = ref(false)
     
     const defaultAvatar = computed(() => {
       return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -173,6 +170,7 @@ export default {
           post.value = res.data.data
           console.log('处理后的帖子详情:', post.value)
           getAuthorInfo(post.value.author_id)
+          await checkLikeStatus(post.value.id)
         }
       } catch (error) {
         console.error('获取帖子详情失败:', error)
@@ -279,6 +277,59 @@ export default {
       }
     }
 
+    // 获取点赞状态
+    const checkLikeStatus = async (postId) => {
+      try {
+        const res = await getLikeStatus(postId, 1) // 1 表示帖子
+        if (res.data.code === 1000) {
+          isLiked.value = res.data.data.status === 'liked'
+        }
+      } catch (error) {
+        console.error('获取点赞状态失败:', error)
+      }
+    }
+
+    // 处理点赞
+    const handleLike = async () => {
+      if (!post.value?.id) return
+
+      try {
+        const res = await toggleLike({
+          target_id: post.value.id,
+          target_type: 1 // 1 表示帖子
+        })
+
+        if (res.data.code === 1000) {
+          isLiked.value = res.data.data.status === 'liked'
+          // 更新点赞数
+          await loadPost() // 重新加载帖子信息以更新点赞数
+          ElMessage.success(isLiked.value ? '点赞成功' : '取消点赞成功')
+        }
+      } catch (error) {
+        console.error('点赞操作失败:', error)
+        ElMessage.error('点赞操作失败')
+      }
+    }
+
+    // 处理评论点赞
+    const handleCommentLike = async (commentId) => {
+      try {
+        const res = await toggleLike({
+          target_id: commentId,
+          target_type: 2 // 2 表示评论
+        })
+
+        if (res.data.code === 1000) {
+          // 更新评论列表以刷新点赞状态和数量
+          await loadComments()
+          ElMessage.success(res.data.data.status === 'liked' ? '点赞成功' : '取消点赞成功')
+        }
+      } catch (error) {
+        console.error('评论点赞失败:', error)
+        ElMessage.error('评论点赞失败')
+      }
+    }
+
     onMounted(async () => {
       await loadPost()
       await loadComments()
@@ -298,7 +349,10 @@ export default {
       cancelReply,
       submitReply,
       userInfo: computed(() => store.state.userInfo),
-      authorName
+      authorName,
+      isLiked,
+      handleLike,
+      handleCommentLike
     }
   }
 }
@@ -373,6 +427,7 @@ export default {
   gap: 4px;
   color: #86909c;
   font-size: 14px;
+  cursor: pointer;
 }
 
 .stat-item .el-icon {
@@ -515,5 +570,13 @@ export default {
 }
 .post-meta span {
   margin-right: 15px;
+}
+
+.liked {
+  color: #1e80ff;
+}
+
+.stat-item:hover {
+  color: #1e80ff;
 }
 </style> 
