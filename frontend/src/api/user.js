@@ -29,4 +29,12 @@ export const updateBio = (data) => {
     method: 'post',
     data
   })
+}
+
+// 根据用户ID获取用户详情
+export function getUserById(userId) {
+  return request({
+    url: `/profile/${userId}`,
+    method: 'get'
+  })
 } 

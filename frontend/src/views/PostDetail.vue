@@ -6,7 +6,7 @@
       </div>
       <h1 class="title">{{ post.title }}</h1>
       <div class="meta">
-        <span class="author">作者：{{ post.author?.username || '未知用户' }}</span>
+        <span class="author">作者：{{ authorName }}</span>
         <span class="time">发布时间：{{ formatDate(post.created_at) }}</span>
         <span class="views">阅读：{{ post.view_count || 0 }}</span>
       </div>
@@ -78,10 +78,12 @@
           <div class="comment-user">
             <el-avatar 
               :size="40" 
-              :src="comment.user?.avatar_url || defaultAvatar"
+              :src="comment.user?.AvatarURL || defaultAvatar"
             />
-            <span class="username">{{ comment.user?.username || '未知用户' }}</span>
-            <span class="comment-time">{{ formatDate(comment.created_at) }}</span>
+            <div class="comment-info">
+              <div class="comment-username">{{ comment.user?.Username || '未知用户' }}</div>
+              <div class="comment-time">{{ formatDate(comment.created_at) }}</div>
+            </div>
           </div>
           <div class="comment-content">{{ comment.content }}</div>
           
@@ -139,6 +141,7 @@ import { getPostComments, createComment } from '../api/comment'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { View, Star, ChatLineRound } from '@element-plus/icons-vue'
+import { getUserById } from '../api/user'
 
 export default {
   name: 'PostDetail',
@@ -156,6 +159,7 @@ export default {
     const replyContent = ref('')
     const replyingTo = ref(null)
     const submitting = ref(false)
+    const authorName = ref('加载中...')
     
     const defaultAvatar = computed(() => {
       return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -168,6 +172,7 @@ export default {
         if (res.data.code === 1000) {
           post.value = res.data.data
           console.log('处理后的帖子详情:', post.value)
+          getAuthorInfo(post.value.author_id)
         }
       } catch (error) {
         console.error('获取帖子详情失败:', error)
@@ -185,8 +190,16 @@ export default {
         const res = await getPostComments(route.params.id)
         console.log('评论列表响应:', res)
         if (res.data.code === 1000) {
-          comments.value = res.data.data.comments
-          console.log('评论数据:', comments.value)
+          comments.value = (res.data.data.comments || []).map(comment => {
+            if (!comment.user) {
+              comment.user = {
+                Username: '未知用户',
+                AvatarURL: defaultAvatar.value
+              }
+            }
+            return comment
+          })
+          console.log('处理后的评论数据:', comments.value)
         }
       } catch (error) {
         console.error('获取评论失败:', error)
@@ -262,6 +275,18 @@ export default {
       }
     }
 
+    const getAuthorInfo = async (authorId) => {
+      try {
+        const { data } = await getUserById(authorId)
+        if (data.code === 1000) {
+          authorName.value = data.data.username
+        }
+      } catch (error) {
+        console.error('获取作者信息失败:', error)
+        authorName.value = '未知用户'
+      }
+    }
+
     onMounted(async () => {
       await loadPost()
       await loadComments()
@@ -281,6 +306,7 @@ export default {
       cancelReply,
       submitReply,
       userInfo: computed(() => store.state.userInfo),
+      authorName
     }
   }
 }
@@ -489,5 +515,13 @@ export default {
   padding: 40px 0;
   color: #86909c;
   font-size: 14px;
+}
+
+.post-meta {
+  color: #666;
+  font-size: 14px;
+}
+.post-meta span {
+  margin-right: 15px;
 }
 </style> 

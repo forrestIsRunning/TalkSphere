@@ -9,7 +9,7 @@
         <div class="right">
           <el-button 
             type="primary" 
-            @click="$router.push('/create-post')"
+            @click="$router.push('/post/create')"
           >
             发表帖子
           </el-button>

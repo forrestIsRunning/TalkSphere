@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="构建帖子列表和帖子详情 前端">
+    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="fix 发表帖子前端页面">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller/post.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/post.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/HelloWorld.vue" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/views/CreatePost.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/CreatePost.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/Home.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/Home.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/PostDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/PostDetail.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +58,8 @@
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -122,7 +127,8 @@
     <MESSAGE value="bug fix: 修复 将JWT Middleware加入全剧错误" />
     <MESSAGE value="构建用户发表帖子前端页面" />
     <MESSAGE value="构建帖子列表和帖子详情 前端" />
-    <option name="LAST_COMMIT_MESSAGE" value="构建帖子列表和帖子详情 前端" />
+    <MESSAGE value="fix 发表帖子前端页面" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix 发表帖子前端页面" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

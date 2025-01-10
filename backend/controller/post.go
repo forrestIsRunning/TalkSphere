@@ -435,25 +435,50 @@ func GetBoardPosts(c *gin.Context) {
 
 // UploadPostImage 上传帖子图片
 func UploadPostImage(c *gin.Context) {
+	zap.L().Info("开始处理图片上传请求")
+
+	// 打印所有接收到的表单字段名
+	form, _ := c.MultipartForm()
+	if form != nil {
+		zap.L().Info("收到的表单字段",
+			zap.Any("form_fields", form.File))
+	}
+
 	file, err := c.FormFile("image")
 	if err != nil {
+		zap.L().Error("获取上传文件失败",
+			zap.Error(err),
+			zap.String("error_type", "form_file_error"),
+			zap.String("expected_field", "image"))
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
+	zap.L().Info("成功获取上传文件",
+		zap.String("filename", file.Filename),
+		zap.Int64("size", file.Size))
 
 	userIDInterface, exists := c.Get(CtxtUserID)
 	if !exists {
+		zap.L().Error("未找到用户ID")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 		return
 	}
+
 	userID, ok := userIDInterface.(int64)
 	if !ok {
+		zap.L().Error("用户ID类型断言失败",
+			zap.Any("user_id_interface", userIDInterface))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
+	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
 
 	imageURL, err := upload.SaveImageToOSS(file, "post_images", userID)
 	if err != nil {
+		zap.L().Error("保存图片到OSS失败",
+			zap.Error(err),
+			zap.String("filename", file.Filename),
+			zap.Int64("user_id", userID))
 		if err.Error() == "文件大小超过限制" || err.Error() == "不支持的文件类型" {
 			ResponseError(c, CodeInvalidParam)
 		} else {
@@ -461,6 +486,8 @@ func UploadPostImage(c *gin.Context) {
 		}
 		return
 	}
+	zap.L().Info("图片成功上传到OSS",
+		zap.String("image_url", imageURL))
 
 	postImage := &models.PostImage{
 		UserID:    userID,
@@ -470,9 +497,15 @@ func UploadPostImage(c *gin.Context) {
 	}
 
 	if err := mysql.DB.Create(postImage).Error; err != nil {
+		zap.L().Error("保存图片记录到数据库失败",
+			zap.Error(err),
+			zap.Any("post_image", postImage))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
+	zap.L().Info("图片记录成功保存到数据库",
+		zap.Int64("image_id", postImage.ID),
+		zap.String("image_url", imageURL))
 
 	ResponseSuccess(c, gin.H{
 		"image_id":  postImage.ID,

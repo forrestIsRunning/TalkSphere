@@ -61,6 +61,8 @@
             :on-remove="handleImageRemove"
             :file-list="uploadedImages"
             list-type="picture"
+            name="image"
+            :data="{ type: 'post' }"
           >
             <el-button type="primary">上传图片</el-button>
             <template #tip>
@@ -124,7 +126,7 @@ export default {
     }
 
     const uploadHeaders = computed(() => ({
-      Authorization: `Bearer ${localStorage.getItem('token')}`
+      Authorization: localStorage.getItem('token')
     }))
 
     const loadBoards = async () => {
