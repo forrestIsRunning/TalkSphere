@@ -17,7 +17,7 @@
             <el-dropdown trigger="click">
               <el-avatar 
                 :size="40" 
-                :src="userInfo.avatar || userInfo.avatar_url || defaultAvatar"
+                :src="userInfo.avatar || defaultAvatar"
               />
               <template #dropdown>
                 <el-dropdown-menu>
@@ -132,6 +132,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getAllBoards } from '../api/board'
 import { getBoardPosts } from '../api/post'
+import { getUserProfile } from '../api/user'
 import dayjs from 'dayjs'
 import { View, Star, ChatLineRound, Collection } from '@element-plus/icons-vue'
 
@@ -231,12 +232,25 @@ export default {
       router.push('/login')
     }
 
+    const loadUserInfo = async () => {
+      try {
+        const res = await getUserProfile()
+        if (res.data.code === 1000) {
+          store.commit('SET_USERINFO', res.data.data)
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+        ElMessage.error('获取用户信息失败')
+      }
+    }
+
     onMounted(async () => {
       await loadBoards()
       // 如果有板块数据，自动选择第一个板块
       if (boards.value.length > 0) {
         selectBoard(boards.value[0].ID)
       }
+      loadUserInfo()
     })
 
     return {

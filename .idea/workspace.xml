@@ -4,14 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="fix 发表帖子前端页面">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/controller/post.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/post.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/HelloWorld.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/CreatePost.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/CreatePost.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/Home.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/Home.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/PostDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/PostDetail.vue" afterDir="false" />
-    </list>
+    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="fix 帖子详情用户名和头像渲染问题" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -128,7 +121,8 @@
     <MESSAGE value="构建用户发表帖子前端页面" />
     <MESSAGE value="构建帖子列表和帖子详情 前端" />
     <MESSAGE value="fix 发表帖子前端页面" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix 发表帖子前端页面" />
+    <MESSAGE value="fix 帖子详情用户名和头像渲染问题" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix 帖子详情用户名和头像渲染问题" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

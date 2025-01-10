@@ -78,10 +78,10 @@
           <div class="comment-user">
             <el-avatar 
               :size="40" 
-              :src="comment.user?.AvatarURL || defaultAvatar"
+              :src="comment.user?.avatar_url || defaultAvatar"
             />
             <div class="comment-info">
-              <div class="comment-username">{{ comment.user?.Username || '未知用户' }}</div>
+              <div class="comment-username">{{ comment.user?.username || '未知用户' }}</div>
               <div class="comment-time">{{ formatDate(comment.created_at) }}</div>
             </div>
           </div>
@@ -111,10 +111,10 @@
               <div class="comment-user">
                 <el-avatar 
                   :size="32" 
-                  :src="reply.user?.AvatarURL || defaultAvatar"
+                  :src="reply.user?.avatar_url || defaultAvatar"
                 />
                 <div class="comment-info">
-                  <div class="comment-username">{{ reply.user?.Username || '未知用户' }}</div>
+                  <div class="comment-username">{{ reply.user?.username || '未知用户' }}</div>
                   <div class="comment-time">{{ formatDate(reply.created_at) }}</div>
                 </div>
               </div>
@@ -190,15 +190,7 @@ export default {
         const res = await getPostComments(route.params.id)
         console.log('评论列表响应:', res)
         if (res.data.code === 1000) {
-          comments.value = (res.data.data.comments || []).map(comment => {
-            if (!comment.user) {
-              comment.user = {
-                Username: '未知用户',
-                AvatarURL: defaultAvatar.value
-              }
-            }
-            return comment
-          })
+          comments.value = res.data.data.comments || []
           console.log('处理后的评论数据:', comments.value)
         }
       } catch (error) {
