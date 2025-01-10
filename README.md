@@ -1,68 +1,41 @@
+## 论坛项目
 
-引入自己的脚手架
-```bash
-git clone git@github.com:Forrest-Tao/My_favorable_scaffold.git backend
-```
+### **1. 用户模块**
 
-```bash
-git add .
-git commit -m "Initial commit"
-git push -u origin main
-```
+- **注册**：用户可以创建账号。
+- **登录**：用户可以通过账号密码进行登录。
+- **登出**：用户可以退出当前会话。
+- **RBAC权限分配**：不同角色的用户具有不同的权限，如普通用户、管理员等，使用角色基于访问控制（RBAC）来管理权限。
 
-mysql环境
-```bash
-docker-compose -p mysql -f /Users/Zhuanz/go/src/forrest/TalkSphere/backend/deploy/mysql-docker-compose.yaml up -d
-```
-与数据库交互
+### **2. 板块管理模块**
 
-```bash
-➜  ~ docker ps -a | grep mysql
-ab9cdd12c62a   mysql:8.0              "docker-entrypoint.s…"   43 hours ago   Up 43 hours   0.0.0.0:3306->3306/tcp, 33060/tcp
+- **板块管理**：管理论坛的不同板块，每个板块可以承载不同主题的帖子，管理员可以新增、修改或删除板块。
 
-#进入docker容器
-➜  ~ docker exec -it ab9cdd12c62a sh
+### **3. 帖子模块**
 
-#show databases
-mysql> show databases;
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| performance_schema |
-| talksphere         |
-+--------------------+
-3 rows in set (0.01 sec)
+- **发表帖子**：用户可以发表带有图片和文字的帖子，内容可以包括图片、文字、链接等多种格式。
 
-#change database
-mysql> use talksphere;
-Database changed
+### **4. 互动模块**
 
-mysql> select * from users \G
-*************************** 1. row ***************************
-        id: 1
-created_at: 2025-01-03 19:10:27.900
-updated_at: 2025-01-03 19:10:27.900
-deleted_at: NULL
-   user_id: 198927022297088
-  username: yansaitao
-  password: 3537313430307973742341bdf8249049c40e8e0ce7305e78e5471b
-     email: yansaitao@qq.com
-    avatar:
-       bio:
-*************************** 2. row ***************************
-        id: 2
-created_at: 2025-01-04 15:52:22.188
-updated_at: 2025-01-04 15:52:22.188
-deleted_at: NULL
-   user_id: 481263710375936
-  username: alice
-  password: 313233bdf8249049c40e8e0ce7305e78e5471b
-     email: email@gamil.com
-    avatar:
-       bio:
-2 rows in set (0.00 sec)
-```
+- **评论**：帖子下方允许用户进行评论，支持树形结构的评论展示，即评论可以嵌套和回复。
+- **点赞**：用户可以对帖子或评论进行点赞。
+- **收藏**：用户可以收藏自己喜欢的帖子，以便以后查看。
+
+### **5. 榜单模块**
+
+- **排行榜**：展示基于某些数据（如点赞数、评论数等）和算法计算的实时榜单（例如 Top 10 最受欢迎的帖子）。
+
+### **6. 模糊搜索模块**
+
+- **帖子搜索**：用户可以通过关键字搜索帖子，支持模糊搜索，返回相关帖子列表。
+
+### **7. 数据可视化模块**
+
+- **数据展示**：将论坛的各种数据（如用户活跃度、帖子数量、点赞数等）通过图表或其他方式进行可视化，帮助管理员或用户分析数据趋势。
+
+
+
+---
 
 ## timeLine
 
@@ -98,3 +71,19 @@ deleted_at: NULL
       - 给贴子点赞
       - 给用户评论点赞
     - 收藏帖子
+- 2025.1.10
+  - 前端
+    -用户发表帖子
+    - 按照板块查看帖子列表
+    - 查看帖子详情
+    - 给帖子点赞、收藏、阅读量增加
+- 2025.1.11
+  - 前端
+    - 支持富文本的格式创建帖子
+    - 支持嵌套评论
+    - 支持用户查看自己点赞的帖子
+    - 支持用户查看自己收藏的帖子
+    - 支持用户查看自己发表的帖子
+    - 支持用户查看自己评论的帖子
+  - 后端
+    - 榜单模块（展示基于某些数据（如点赞数、评论数等）和算法计算的实时榜单（例如 Top 10 最受欢迎的帖子））
