@@ -23,6 +23,8 @@ func InitInteractionRoutes(r *gin.Engine) {
 	likeGroup := r.Group("/likes")
 	{
 		likeGroup.POST("", middleware.JWTAuthMiddleware(), controller.CreateLike)
+		//GetLikeStatus
+		likeGroup.GET("/status", middleware.JWTAuthMiddleware(), controller.GetLikeStatus)
 	}
 
 	// 收藏相关路由

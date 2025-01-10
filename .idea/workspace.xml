@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="fix 【前端】帖子下评论用户头像和名称显示问题" />
+    <list default="true" id="880ef2ba-5074-470f-8c61-4b5bc8593301" name="Changes" comment="fix 【前端】实现点赞效果">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller/like.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/like.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/router/interaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/router/interaction.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -123,7 +128,8 @@
     <MESSAGE value="fix 发表帖子前端页面" />
     <MESSAGE value="fix 帖子详情用户名和头像渲染问题" />
     <MESSAGE value="fix 【前端】帖子下评论用户头像和名称显示问题" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix 【前端】帖子下评论用户头像和名称显示问题" />
+    <MESSAGE value="fix 【前端】实现点赞效果" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix 【前端】实现点赞效果" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

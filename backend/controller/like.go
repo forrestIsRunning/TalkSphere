@@ -3,8 +3,10 @@ package controller
 import (
 	"TalkSphere/dao/mysql"
 	"TalkSphere/models"
-	"go.uber.org/zap"
 	"net/http"
+	"strconv"
+
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -132,4 +134,64 @@ func CreateLike(c *gin.Context) {
 
 	tx.Commit()
 	ResponseSuccess(c, gin.H{"status": "liked"})
+}
+
+// GetLikeStatus 获取点赞状态
+func GetLikeStatus(c *gin.Context) {
+	// 从 URL 参数获取目标 ID 和类型
+	targetID := c.Query("target_id")
+	targetType := c.Query("target_type")
+
+	// 从 JWT 中获取当前用户 ID
+	userID, exists := c.Get("userID")
+	if !exists {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+
+	// 转换参数类型
+	targetIDInt, err := strconv.ParseInt(targetID, 10, 64)
+	if err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	targetTypeInt, err := strconv.Atoi(targetType)
+	if err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	// 查询点赞状态
+	var CheckLikeStatus func(userID int64, targetID int64, targetType int) (bool, error)
+	CheckLikeStatus = func(userID int64, targetID int64, targetType int) (bool, error) {
+		var exists bool
+		err := mysql.DB.Model(&models.Like{}).
+			Select("count(*) > 0").
+			Where("user_id = ? AND target_id = ? AND target_type = ?", userID, targetID, targetType).
+			Find(&exists).
+			Error
+
+		if err != nil {
+			zap.L().Error("检查点赞状态失败", zap.Error(err))
+			return false, err
+		}
+
+		return exists, nil
+	}
+
+	liked, err := CheckLikeStatus(userID.(int64), targetIDInt, targetTypeInt)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	status := "unliked"
+	if liked {
+		status = "liked"
+	}
+
+	ResponseSuccess(c, gin.H{
+		"status": status,
+	})
 }
