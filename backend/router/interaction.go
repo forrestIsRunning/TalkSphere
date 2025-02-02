@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitInteractionRoutes(r *gin.Engine) {
+func InitInteractionRoutes(r *gin.RouterGroup) {
 	// 评论相关路由
 	commentGroup := r.Group("/comments")
 	{
