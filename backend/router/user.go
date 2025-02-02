@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUserRoutes(r *gin.Engine) {
+func RegisterUserRoutes(r *gin.RouterGroup) {
 	// 公开路由 - 不需要登录
 	r.POST("/register", controller.RegisterHandler)
 	r.POST("/login", controller.LoginHandler)

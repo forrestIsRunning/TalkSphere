@@ -17,7 +17,8 @@ func Setup() *gin.Engine {
 
 	r := gin.Default()
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
-	r.Use(cors.New(cors.Config{
+	group := r.Group("/api")
+	group.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type", "Accept"},
@@ -27,10 +28,10 @@ func Setup() *gin.Engine {
 	}))
 
 	// 添加 swagger 路由
-	RegisterUserRoutes(r)
-	InitBoardRouter(r)
-	InitPostRouter(r)
-	InitInteractionRoutes(r)
+	RegisterUserRoutes(group)
+	InitBoardRouter(group)
+	InitPostRouter(group)
+	InitInteractionRoutes(group)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r
 }

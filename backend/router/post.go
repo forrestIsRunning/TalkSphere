@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitPostRouter(r *gin.Engine) {
+func InitPostRouter(r *gin.RouterGroup) {
 	postGroup := r.Group("/posts")
 	postGroup.Use(middleware.JWTAuthMiddleware()) // 需要登录才能访问
 
