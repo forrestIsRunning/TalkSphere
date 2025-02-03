@@ -419,6 +419,7 @@ func GetBoardPosts(c *gin.Context) {
 
 	if err := db.Preload("Author").
 		Preload("Tags").
+		Preload("Images"). // 添加预加载图片
 		Select("posts.*, users.username as author_username, users.avatar_url as author_avatar_url").
 		Offset(int((page - 1) * size)).
 		Limit(int(size)).

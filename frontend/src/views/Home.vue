@@ -103,8 +103,11 @@
               </div>
             </div>
 
-            <div class="post-cover" v-if="post.Images?.length">
-              <el-image :src="post.Images[0].URL" fit="cover" />
+            <div class="post-cover" v-if="post.images?.length">
+              <el-image :src="post.images[0].ImageURL" fit="cover" />
+            </div>
+            <div class="post-content" v-else>
+              <p class="post-excerpt">{{ post.content?.slice(0, 100) }}...</p>
             </div>
           </div>
         </div>
@@ -470,8 +473,8 @@ export default {
 }
 
 .post-cover {
-  width: 120px;
-  height: 80px;
+  width: 200px;
+  height: 150px;
   border-radius: 4px;
   overflow: hidden;
 }
