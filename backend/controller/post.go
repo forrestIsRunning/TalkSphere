@@ -397,40 +397,100 @@ func GetUserPosts(c *gin.Context) {
 	})
 }
 
-// GetBoardPosts 获取板块下的帖子列表
+// GetBoardPosts 获取板块帖子列表
 func GetBoardPosts(c *gin.Context) {
-	boardIDStr := c.Param("board_id")
-	boardID, err := strconv.ParseInt(boardIDStr, 10, 64)
-	if err != nil {
-		ResponseError(c, CodeInvalidParam)
+	// 获取板块ID
+	boardID := c.Param("board_id")
+
+	// 获取分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+
+	// 获取搜索参数
+	searchQuery := c.Query("search_query")
+	searchType := c.Query("search_type")
+
+	// 构建查询条件
+	query := mysql.DB.Model(&models.Post{}).Where("board_id = ?", boardID)
+
+	// 根据搜索类型添加搜索条件
+	if searchQuery != "" {
+		switch searchType {
+		case "username":
+			// 关联用户表进行用户名搜索
+			query = query.Joins("JOIN users ON posts.author_id = users.id").
+				Where("users.username LIKE ?", "%"+searchQuery+"%")
+		case "content":
+			// 搜索帖子内容
+			query = query.Where("posts.content LIKE ?", "%"+searchQuery+"%")
+		case "all":
+			// 同时搜索用户名和帖子内容
+			query = query.Joins("JOIN users ON posts.author_id = users.id").
+				Where("users.username LIKE ? OR posts.content LIKE ?",
+					"%"+searchQuery+"%", "%"+searchQuery+"%")
+		}
+	}
+
+	// 获取总数
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	page, size := getPageInfo(c)
+	// 分页查询帖子
 	var posts []models.Post
-	var total int64
-
-	// 修改查询,使用正确的字段名 avatar_url
-	db := mysql.DB.Model(&models.Post{}).
-		Joins("LEFT JOIN users ON posts.author_id = users.id").
-		Where("posts.board_id = ? AND posts.status != -1", boardID)
-
-	db.Count(&total)
-
-	if err := db.Preload("Author").
-		Preload("Tags").
-		Preload("Images"). // 添加预加载图片
-		Select("posts.*, users.username as author_username, users.avatar_url as author_avatar_url").
-		Offset(int((page - 1) * size)).
-		Limit(int(size)).
+	if err := query.
+		Preload("Author"). // 预加载作者信息
+		Preload("Images"). // 预加载图片信息
+		Offset((page - 1) * size).
+		Limit(size).
+		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
+	// 构建响应数据
+	var postList []map[string]interface{}
+	for _, post := range posts {
+		postData := map[string]interface{}{
+			"id":            post.ID,
+			"title":         post.Title,
+			"content":       post.Content,
+			"author_id":     post.AuthorID,
+			"view_count":    post.ViewCount,
+			"like_count":    post.LikeCount,
+			"comment_count": post.CommentCount,
+			"created_at":    post.CreatedAt,
+			"updated_at":    post.UpdatedAt,
+			"author": map[string]interface{}{
+				"id":         post.Author.ID,
+				"username":   post.Author.Username,
+				"avatar_url": post.Author.AvatarURL,
+			},
+		}
+
+		// 处理图片
+		var images []map[string]interface{}
+		for _, img := range post.Images {
+			images = append(images, map[string]interface{}{
+				"id":         img.ID,
+				"url":        img.ImageURL,
+				"post_id":    img.PostID,
+				"created_at": img.CreatedAt,
+			})
+		}
+		postData["images"] = images
+
+		postList = append(postList, postData)
+	}
+
 	ResponseSuccess(c, gin.H{
-		"posts": posts,
-		"total": total,
+		"posts":        postList,
+		"total":        total,
+		"current_page": page,
+		"page_size":    size,
 	})
 }
 

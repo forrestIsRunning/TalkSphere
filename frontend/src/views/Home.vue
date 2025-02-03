@@ -29,9 +29,8 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>image.png
 
-    <!-- 主体内容区 -->
     <div class="main-wrapper">
       <!-- 左侧板块列表 -->
       <div class="side-nav">
@@ -48,6 +47,26 @@
 
       <!-- 右侧内容区 -->
       <div class="content-area">
+        <!-- 搜索区域 -->
+        <div class="search-section">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索用户名或帖子内容..."
+            class="search-input"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <el-select v-model="searchType" class="search-type">
+            <el-option label="全部" value="all" />
+            <el-option label="用户名" value="username" />
+            <el-option label="帖子内容" value="content" />
+          </el-select>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+        </div>
+
         <!-- 欢迎信息 -->
         <div v-if="!selectedBoardId" class="welcome-message">
           <h2>欢迎来到 TalkSphere</h2>
@@ -137,13 +156,14 @@ import { getAllBoards } from '../api/board'
 import { getBoardPosts } from '../api/post'
 import { getUserProfile } from '../api/user'
 import dayjs from 'dayjs'
-import { View, ChatLineRound } from '@element-plus/icons-vue'
+import { View, ChatLineRound, Search } from '@element-plus/icons-vue'
 
 export default {
   name: 'HomePage',
   components: {
     View,
-    ChatLineRound
+    ChatLineRound,
+    Search
   },
   setup() {
     const store = useStore()
@@ -156,8 +176,12 @@ export default {
     const selectedBoardId = ref(null)
     const currentBoardName = ref('')
     const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png')
+    const searchQuery = ref('')
+    const searchType = ref('all')
+    const loading = ref(false)
 
     const loadPosts = async () => {
+      loading.value = true
       try {
         if (!selectedBoardId.value) {
           posts.value = []
@@ -165,9 +189,16 @@ export default {
           return
         }
 
+        // 构建查询参数
         const params = {
           page: currentPage.value,
           size: pageSize.value
+        }
+        
+        // 只有当搜索条件不为空时才添加搜索参数
+        if (searchQuery.value) {
+          params.search_query = searchQuery.value
+          params.search_type = searchType.value
         }
         
         const res = await getBoardPosts(selectedBoardId.value, params)
@@ -181,6 +212,8 @@ export default {
       } catch (error) {
         console.error('获取帖子列表失败:', error)
         ElMessage.error('获取帖子列表失败')
+      } finally {
+        loading.value = false
       }
     }
 
@@ -259,6 +292,11 @@ export default {
       }
     }
 
+    const handleSearch = () => {
+      currentPage.value = 1
+      loadPosts()
+    }
+
     onMounted(async () => {
       await loadBoards()
       // 如果有板块数据，自动选择第一个板块
@@ -283,7 +321,11 @@ export default {
       selectBoard,
       handleSizeChange,
       handleCurrentChange,
-      handleLogout
+      handleLogout,
+      searchQuery,
+      searchType,
+      loading,
+      handleSearch
     }
   }
 }
@@ -334,15 +376,17 @@ export default {
   padding-top: 60px;
   max-width: 1440px;
   margin: 0 auto;
+  height: calc(100vh - 60px); /* 设置主容器高度为视口高度减去顶部导航栏高度 */
 }
 
 .side-nav {
   width: 240px;
   padding: 20px 0;
   border-right: 1px solid #e4e6eb;
-  height: calc(100vh - 60px);
+  height: 100%;
   position: fixed;
   background: #fff;
+  overflow-y: auto;
 }
 
 .nav-item {
@@ -363,6 +407,8 @@ export default {
   flex: 1;
   margin-left: 240px;
   padding: 20px;
+  height: 100%;
+  overflow-y: auto; /* 添加垂直滚动条 */
 }
 
 .operation-bar {
@@ -395,6 +441,8 @@ export default {
 .post-list {
   background: #fff;
   border-radius: 4px;
+  max-height: calc(100vh - 250px); /* 设置帖子列表最大高度 */
+  overflow-y: auto; /* 添加垂直滚动条 */
 }
 
 .post-item {
@@ -403,6 +451,8 @@ export default {
   cursor: pointer;
   display: flex;
   gap: 16px;
+  max-height: 200px; /* 设置每个帖子项的最大高度 */
+  overflow: hidden; /* 超出部分隐藏 */
 }
 
 .post-item:hover {
@@ -450,6 +500,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-height: 60px; /* 限制摘要最大高度 */
 }
 
 .post-meta {
@@ -489,6 +540,7 @@ export default {
   justify-content: center;
   align-items: center;
   gap: 16px;
+  padding: 16px 0;
 }
 
 .total-text {
@@ -544,5 +596,23 @@ export default {
 .welcome-message p {
   color: #86909c;
   font-size: 16px;
+}
+
+.search-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-type {
+  width: 120px;
 }
 </style> 
