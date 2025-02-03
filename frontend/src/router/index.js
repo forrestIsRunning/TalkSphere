@@ -5,6 +5,8 @@ import Home from '../views/Home.vue'
 import UserProfile from '../views/UserProfile.vue'
 import store from '../store'
 import { getUserProfile } from '../api/user'
+import { ElMessage } from 'element-plus'
+import { isAdmin } from '@/utils/permission'
 
 import CreatePost from '../views/CreatePost.vue'
 import PostDetail from '../views/PostDetail.vue'
@@ -15,6 +17,12 @@ const routes = [
     name: 'Home',
     component: Home,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: Login,
+    props: { isAdminLogin: true }
   },
   {
     path: '/login',
@@ -43,6 +51,15 @@ const routes = [
     name: 'PostDetail',
     component: PostDetail,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/board-manage',
+    name: 'BoardManage',
+    component: () => import('@/views/BoardManage.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true // 需要管理员权限
+    }
   }
 ]
 
@@ -68,6 +85,12 @@ router.beforeEach(async (to, from, next) => {
         const res = await getUserProfile()
         if (res.data.code === 1000) {
           store.commit('SET_USERINFO', res.data.data)
+          // 检查管理员权限
+          if (to.meta.requiresAdmin && !(await isAdmin(res.data.data.userID))) {
+            ElMessage.error('需要管理员权限')
+            next({ path: '/' })
+            return
+          }
           next()
           return
         } else {
@@ -82,6 +105,13 @@ router.beforeEach(async (to, from, next) => {
         return
       }
     }
+  }
+  
+  // 已有用户信息，检查管理员权限
+  if (to.meta.requiresAdmin && !(await isAdmin(userInfo.userID))) {
+    ElMessage.error('需要管理员权限')
+    next({ path: '/' })
+    return
   }
   
   next()

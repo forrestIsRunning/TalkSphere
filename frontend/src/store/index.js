@@ -12,8 +12,10 @@ export default createStore({
       localStorage.setItem('token', token)
     },
     SET_USERINFO(state, userInfo) {
-      state.userInfo = userInfo
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      state.userInfo = {
+        ...userInfo,
+      }
+      localStorage.setItem('userInfo', JSON.stringify(state.userInfo))
     },
     CLEAR_USER(state) {
       state.token = ''

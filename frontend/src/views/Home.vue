@@ -110,13 +110,13 @@
         </div>
 
         <!-- 分页器 -->
-        <div class="pagination-wrapper">
+        <div class="pagination-wrapper" v-if="total > 0">
           <span class="total-text">共 {{ total }} 条</span>
           <el-pagination
             v-model:current-page="currentPage"
             :page-size="pageSize"
             :total="total"
-            layout="prev, pager, next"
+            layout="total, prev, pager, next"
             @current-change="handleCurrentChange"
           />
         </div>
@@ -170,12 +170,12 @@ export default {
         }
         
         const res = await getBoardPosts(selectedBoardId.value, params)
-        console.log('帖子列表响应:', res)
-
+        console.log('API返回数据:', res.data)
+        
         if (res.data.code === 1000) {
           posts.value = res.data.data.posts
           total.value = res.data.data.total
-          console.log('帖子数据:', posts.value)
+          console.log('设置的总数:', total.value)
         }
       } catch (error) {
         console.error('获取帖子列表失败:', error)
@@ -186,10 +186,24 @@ export default {
     const loadBoards = async () => {
       try {
         const res = await getAllBoards()
-        console.log('板块数据:', res.data)
         if (res.data.code === 1000) {
-          boards.value = res.data.data || []
-          console.log('处理后的板块数据:', boards.value)
+          // 获取所有板块
+          const boardsData = res.data.data || []
+          
+          // 为每个板块获取其帖子数量
+          for (let board of boardsData) {
+            try {
+              const postsRes = await getBoardPosts(board.ID, { page: 1, size: 1 })
+              if (postsRes.data.code === 1000) {
+                board.post_count = postsRes.data.data.total || 0
+              }
+            } catch (error) {
+              console.error(`获取板块 ${board.ID} 帖子数量失败:`, error)
+              board.post_count = 0
+            }
+          }
+          
+          boards.value = boardsData
         }
       } catch (error) {
         console.error('获取板块列表失败:', error)
@@ -470,17 +484,14 @@ export default {
 
 .pagination-wrapper {
   margin-top: 20px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 4px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-start;
   gap: 16px;
 }
 
 .total-text {
-  color: #86909c;
+  color: #606266;
   font-size: 14px;
 }
 

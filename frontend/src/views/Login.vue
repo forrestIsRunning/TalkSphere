@@ -1,9 +1,9 @@
 <template>
   <div class="login-container">
     <el-card class="login-card">
-      <h2>登录 TalkSphere</h2>
+      <h2>{{ isAdminLogin ? '管理员登录' : '登录 TalkSphere' }}</h2>
       <p class="subtitle">欢迎回来！请登录您的账号</p>
-      <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
+      <el-form :model="loginForm" :rules="rules" ref="loginFormRef" class="login-form">
         <el-form-item prop="username">
           <el-input 
             v-model="loginForm.username" 
@@ -28,17 +28,26 @@
           </el-input>
         </el-form-item>
         <el-form-item class="btn-container">
-          <el-button 
-            type="primary" 
-            @click="handleLogin" 
-            :loading="loading"
-            size="large"
-          >登录</el-button>
-          <div class="btn-spacer"></div>
-          <el-button 
-            @click="$router.push('/register')"
-            size="large"
-          >注册账号</el-button>
+          <div class="btn-row" :class="{ 'admin-login': isAdminLogin }">
+            <el-button 
+              type="primary" 
+              @click="handleLogin" 
+              :loading="loading"
+              size="large"
+              :class="{ 'admin-btn': isAdminLogin }"
+            >登录</el-button>
+            <template v-if="!isAdminLogin">
+              <el-button 
+                type="success" 
+                @click="goToAdminLogin" 
+                size="large"
+              >管理员登录</el-button>
+              <el-button 
+                @click="$router.push('/register')"
+                size="large"
+              >注册账号</el-button>
+            </template>
+          </div>
         </el-form-item>
       </el-form>
     </el-card>
@@ -47,20 +56,28 @@
 
 <script>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { login } from '../api/user'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
+import { isAdmin } from '@/utils/permission'
 
 export default {
   name: 'LoginPage',
+  props: {
+    isAdminLogin: {
+      type: Boolean,
+      default: false
+    }
+  },
   components: {
     User,
     Lock
   },
-  setup() {
+  setup(props) {
     const router = useRouter()
+    const route = useRoute()
     const store = useStore()
     const loginFormRef = ref(null)
     const loading = ref(false)
@@ -75,37 +92,52 @@ export default {
     }
 
     const handleLogin = async () => {
-      if (!loginFormRef.value) return
-      
-      await loginFormRef.value.validate(async (valid) => {
-        if (valid) {
-          loading.value = true
-          try {
-            const res = await login(loginForm.value)
-            if (res.data.code === 1000) {
-              const token = res.data.data.token
-              store.commit('SET_TOKEN', token)
-              
-              store.commit('SET_USERINFO', {
-                userID: res.data.data.userID,
-                username: res.data.data.username,
-                avatar_url: res.data.data.avatar_url,
-                bio: res.data.data.bio
-              })
-
-              ElMessage.success('登录成功')
-              await router.push('/')
-            } else {
-              ElMessage.error(res.data.msg || '登录失败')
-            }
-          } catch (error) {
-            console.error('登录错误:', error)
-            ElMessage.error('登录失败')
-          } finally {
-            loading.value = false
+  if (!loginFormRef.value) return
+  
+  await loginFormRef.value.validate(async (valid) => {
+    if (valid) {
+      loading.value = true
+      try {
+        const res = await login(loginForm.value)
+        if (res.data.code === 1000) {
+          // 直接从 data 中获取数据
+          const { token, userID, username } = res.data.data
+          
+          store.commit('SET_TOKEN', token)
+          store.commit('SET_USERINFO', { userID, username })
+          ElMessage.success('登录成功')
+          
+          // 检查是否是管理员账号
+          if (await isAdmin(userID)) { // 使用正确的 userID
+            router.push('/board-manage')
+            return
           }
+          
+          // 如果是管理员登录页面但不是管理员账号
+          if (props.isAdminLogin && !(await isAdmin(userID))) { // 使用正确的 userID
+            ElMessage.error('非管理员账号，请使用管理员账号登录')
+            return
+          }
+          
+          // 如果有重定向地址则跳转到重定向地址
+          const redirect = route.query.redirect
+          router.push(redirect || '/')
+        } else {
+          ElMessage.error(res.data.msg || '登录失败') // 使用 msg 而不是 message
         }
-      })
+      } catch (error) {
+        console.error('登录错误:', error)
+        ElMessage.error('登录失败')
+      } finally {
+        loading.value = false
+      }
+    }
+  })
+}
+
+    // 跳转到管理员登录页面
+    const goToAdminLogin = () => {
+      router.push('/admin/login')
     }
 
     return {
@@ -113,7 +145,8 @@ export default {
       loginFormRef,
       rules,
       loading,
-      handleLogin
+      handleLogin,
+      goToAdminLogin
     }
   }
 }
@@ -175,23 +208,37 @@ h2 {
   color: #909399;
 }
 
-.btn-container {
+.login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 35px;
 }
 
-.btn-spacer {
-  height: 10px;
+.btn-container {
+  margin-top: 35px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-row:not(.admin-login) {
+  justify-content: space-between;
 }
 
 .el-button {
-  width: 100%;
   height: 44px;
   font-size: 16px;
   border-radius: 8px;
   font-weight: 500;
+}
+
+.btn-row:not(.admin-login) .el-button {
+  flex: 1;
 }
 
 .el-button--primary {
@@ -217,6 +264,18 @@ h2 {
   background-color: #ecf5ff;
 }
 
+.el-button--success {
+  background-color: #67C23A;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.el-button--success:hover {
+  background-color: #85ce61;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(103, 194, 58, 0.2);
+}
+
 :deep(.el-input__prefix) {
   display: flex;
   align-items: center;
@@ -236,5 +295,28 @@ h2 {
   h2 {
     font-size: 24px;
   }
+  
+  .btn-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .el-button {
+    width: 100%;
+  }
+
+  .admin-btn {
+    width: 80% !important;
+  }
+}
+
+/* 修改管理员登录页面的按钮样式 */
+.btn-row.admin-login {
+  justify-content: center;
+}
+
+.admin-btn {
+  width: 200px !important;
 }
 </style> 
