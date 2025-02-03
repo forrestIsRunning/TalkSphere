@@ -16,7 +16,7 @@ func InitBoardRouter(r *gin.RouterGroup) {
 
 	// 需要登录的接口
 	authGroup := r.Group("/boards")
-	authGroup.Use(middleware.JWTAuthMiddleware())
+	authGroup.Use(middleware.JWTAuthMiddleware(), middleware.AdminRequired())
 	{
 		authGroup.POST("", controller.CreateBoard)       // 创建板块需要登录
 		authGroup.PUT("/:id", controller.UpdateBoard)    // 更新板块需要登录

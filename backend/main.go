@@ -5,6 +5,7 @@ import (
 	_ "TalkSphere/docs" // swagger docs
 	"TalkSphere/pkg/logger"
 	"TalkSphere/pkg/oss"
+	"TalkSphere/pkg/rbac"
 	"TalkSphere/pkg/snowflake"
 	"TalkSphere/router"
 	"TalkSphere/setting"
@@ -77,6 +78,8 @@ func main() {
 		zap.L().Fatal("snowflake.Init() failed ", zap.Error(err))
 		return
 	}
+
+	rbac.InitCasbin()
 
 	// 5. 注册路由
 	r := router.Setup()

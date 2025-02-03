@@ -18,7 +18,6 @@ func CreateBoard(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	//TODO middleware实现RBAC身份验证
 	userID, exists := c.Get(CtxtUserID)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
@@ -83,5 +82,3 @@ func GetAllBoards(c *gin.Context) {
 	zap.L().Info("boards", zap.Any("boards", boards))
 	ResponseSuccess(c, boards)
 }
-
-//middleware TODO 用户是否为管理员权限认证

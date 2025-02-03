@@ -1,11 +1,13 @@
 package router
 
 import (
+	"TalkSphere/controller"
 	"TalkSphere/pkg/logger"
 	"TalkSphere/setting"
+	"time"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -17,8 +19,12 @@ func Setup() *gin.Engine {
 
 	r := gin.Default()
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
-	group := r.Group("/api")
-	group.Use(cors.New(cors.Config{
+	//r.POST("/auth/check", controller.CheckPermission)
+	r.GET("/user/check/:id", controller.CheckAdminPermission)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	apiGroup := r.Group("/api")
+	apiGroup.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type", "Accept"},
@@ -27,11 +33,9 @@ func Setup() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// 添加 swagger 路由
-	RegisterUserRoutes(group)
-	InitBoardRouter(group)
-	InitPostRouter(group)
-	InitInteractionRoutes(group)
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	RegisterUserRoutes(apiGroup)
+	InitBoardRouter(apiGroup)
+	InitPostRouter(apiGroup)
+	InitInteractionRoutes(apiGroup)
 	return r
 }
