@@ -1,7 +1,24 @@
 <template>
   <div class="user-management">
+    <div class="search-bar">
+      <el-input
+        v-model="searchKeyword"
+        placeholder="搜索用户名/ID/邮箱/简介"
+        clearable
+        @clear="handleSearch"
+        @keyup.enter="handleSearch"
+        style="width: 300px"
+      >
+        <template #append>
+          <el-button @click="handleSearch">
+            <el-icon><Search /></el-icon>
+          </el-button>
+        </template>
+      </el-input>
+    </div>
+
     <h2>用户管理</h2>
-    <el-table :data="users" style="width: 100%">
+    <el-table :data="users" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" label="ID" width="180" />
       <el-table-column prop="username" label="用户名" width="180" />
       <el-table-column prop="email" label="邮箱" width="180" />
@@ -41,15 +58,18 @@
 import request from '@/utils/request'
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
 
 export default {
   name: 'UserManagement',
+  components: { Search },
   setup() {
+    const searchKeyword = ref('')
+    const loading = ref(false)
     const users = ref([])
     const total = ref(0)
     const currentPage = ref(1)
     const pageSize = ref(10)
-    const loading = ref(false)
 
     const fetchUsers = async () => {
       try {
@@ -59,7 +79,8 @@ export default {
           method: 'get',
           params: {
             page: currentPage.value,
-            size: pageSize.value
+            size: pageSize.value,
+            keyword: searchKeyword.value
           }
         })
         
@@ -95,11 +116,18 @@ export default {
       return new Date(date).toLocaleString()
     }
 
+    const handleSearch = () => {
+      currentPage.value = 1
+      fetchUsers()
+    }
+
     onMounted(() => {
       fetchUsers()
     })
 
     return {
+      searchKeyword,
+      loading,
       users,
       total,
       currentPage,
@@ -108,7 +136,8 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       formatDate,
-      loading
+      handleSearch,
+      fetchUsers
     }
   }
 }
@@ -117,6 +146,10 @@ export default {
 <style scoped>
 .user-management {
   padding: 20px;
+}
+
+.search-bar {
+  margin-bottom: 20px;
 }
 
 .pagination {
