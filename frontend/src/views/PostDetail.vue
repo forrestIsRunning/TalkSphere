@@ -102,6 +102,25 @@
             </span>
           </div>
 
+          <!-- 回复输入框 -->
+          <div class="reply-input" v-if="replyingTo === comment.id">
+            <el-input
+              v-model="replyContent"
+              type="textarea"
+              :rows="2"
+              placeholder="回复评论..."
+            />
+            <div class="reply-actions">
+              <el-button size="small" @click="cancelReply">取消</el-button>
+              <el-button 
+                type="primary" 
+                size="small"
+                @click="submitReply(comment.id)"
+                :loading="submitting"
+              >回复</el-button>
+            </div>
+          </div>
+
           <!-- 回复列表 -->
           <div class="reply-list" v-if="comment.children?.length">
             <div v-for="reply in comment.children" 
@@ -119,6 +138,32 @@
                 </div>
               </div>
               <div class="comment-content">{{ reply.content }}</div>
+              
+              <!-- 回复的回复按钮 -->
+              <div class="comment-actions">
+                <span class="reply-btn" @click="showReplyInput(reply.id)">
+                  回复
+                </span>
+              </div>
+
+              <!-- 回复的回复输入框 -->
+              <div class="reply-input" v-if="replyingTo === reply.id">
+                <el-input
+                  v-model="replyContent"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="回复评论..."
+                />
+                <div class="reply-actions">
+                  <el-button size="small" @click="cancelReply">取消</el-button>
+                  <el-button 
+                    type="primary" 
+                    size="small"
+                    @click="submitReply(reply.id)"
+                    :loading="submitting"
+                  >回复</el-button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -253,9 +298,9 @@ export default {
       submitting.value = true
       try {
         const res = await createComment({
-          post_id: route.params.id,
+          post_id: parseInt(route.params.id),
           parent_id: commentId,
-          content: replyContent.value
+          content: replyContent.value.trim()
         })
         if (res.data.code === 1000) {
           ElMessage.success('回复成功')
