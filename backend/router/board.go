@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitBoardRouter(r *gin.RouterGroup) {
+func RegisterBoardRouter(r *gin.RouterGroup) {
 	// 公开接口 - 不需要登录
 	publicGroup := r.Group("/boards")
 	{

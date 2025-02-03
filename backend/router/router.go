@@ -38,8 +38,9 @@ func Setup() *gin.Engine {
 
 	apiGroup := r.Group("/api")
 	RegisterUserRoutes(apiGroup)
-	InitBoardRouter(apiGroup)
-	InitPostRouter(apiGroup)
-	InitInteractionRoutes(apiGroup)
+	RegisterBoardRouter(apiGroup)
+	RegisterPostRouter(apiGroup)
+	RegisterInteractionRoutes(apiGroup)
+	RegisterStatsRoutes(apiGroup)
 	return r
 }
