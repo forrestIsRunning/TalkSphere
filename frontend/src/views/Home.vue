@@ -89,11 +89,11 @@
                   {{ post.view_count }}
                 </span>
                 <span class="meta-item">
-                  <el-icon><Star /></el-icon>
+                  👍
                   {{ post.like_count }}
                 </span>
                 <span class="meta-item">
-                  <el-icon><Collection /></el-icon>
+                  📚
                   {{ post.favorite_count }}
                 </span>
                 <span class="meta-item">
@@ -137,15 +137,13 @@ import { getAllBoards } from '../api/board'
 import { getBoardPosts } from '../api/post'
 import { getUserProfile } from '../api/user'
 import dayjs from 'dayjs'
-import { View, Star, ChatLineRound, Collection } from '@element-plus/icons-vue'
+import { View, ChatLineRound } from '@element-plus/icons-vue'
 
 export default {
   name: 'HomePage',
   components: {
     View,
-    Star,
-    ChatLineRound,
-    Collection
+    ChatLineRound
   },
   setup() {
     const store = useStore()

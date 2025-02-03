@@ -25,12 +25,16 @@
       <!-- 帖子统计信息 -->
       <div class="post-stats">
         <span class="stat-item" @click="handleLike">
-          <el-icon :class="{ 'liked': isLiked }"><Star /></el-icon>
+          <span :class="{ 'liked': isLiked }">👍</span>
           点赞 {{ post.like_count || 0 }}
         </span>
         <span class="stat-item">
           <el-icon><ChatLineRound /></el-icon>
           评论 {{ post.comment_count || 0 }}
+        </span>
+        <span class="stat-item" @click="handleFavorite">
+          <span :class="{ 'favorited': isFavorited }">📚</span>
+          收藏 {{ post.favorite_count || 0 }}
         </span>
       </div>
     </div>
@@ -139,6 +143,7 @@ import dayjs from 'dayjs'
 import { Star, ChatLineRound } from '@element-plus/icons-vue'
 import { getUserProfile } from '../api/user'
 import { toggleLike, getLikeStatus } from '../api/like'
+import { toggleFavorite } from '../api/favorite'
 
 export default {
   name: 'PostDetail',
@@ -157,6 +162,7 @@ export default {
     const submitting = ref(false)
     const authorName = ref('加载中...')
     const isLiked = ref(false)
+    const isFavorited = ref(false)
     
     const defaultAvatar = computed(() => {
       return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -330,6 +336,24 @@ export default {
       }
     }
 
+    // 处理收藏
+    const handleFavorite = async () => {
+      if (!post.value?.id) return
+
+      try {
+        const res = await toggleFavorite(post.value.id)
+        if (res.data.code === 1000) {
+          isFavorited.value = res.data.data.status === 'favorited'
+          // 更新帖子信息以刷新收藏数
+          await loadPost()
+          ElMessage.success(isFavorited.value ? '收藏成功' : '取消收藏成功')
+        }
+      } catch (error) {
+        console.error('收藏操作失败:', error)
+        ElMessage.error('收藏操作失败')
+      }
+    }
+
     onMounted(async () => {
       await loadPost()
       await loadComments()
@@ -352,7 +376,9 @@ export default {
       authorName,
       isLiked,
       handleLike,
-      handleCommentLike
+      handleCommentLike,
+      isFavorited,
+      handleFavorite
     }
   }
 }
@@ -572,11 +598,18 @@ export default {
   margin-right: 15px;
 }
 
-.liked {
-  color: #1e80ff;
+.stat-item span {
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.stat-item:hover {
-  color: #1e80ff;
+.stat-item span:hover {
+  transform: scale(1.2);
+}
+
+.liked, .favorited {
+  filter: brightness(1.2);
 }
 </style> 
