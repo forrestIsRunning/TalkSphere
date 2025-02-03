@@ -12,7 +12,6 @@ func RegisterUserRoutes(r *gin.RouterGroup) {
 	authGroup.Use(middleware.JWTAuthMiddleware())
 	{
 		authGroup.GET("/profile", controller.GetUserProfile)
-		authGroup.GET("/profile/:id", controller.GetUserProfile)
 		authGroup.POST("/bio", controller.UpdateUserBio)
 		authGroup.POST("/avatar", controller.UpdateUserAvatar)
 	}

@@ -92,48 +92,52 @@ export default {
     }
 
     const handleLogin = async () => {
-  if (!loginFormRef.value) return
-  
-  await loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
+      if (!loginFormRef.value) return
+      
       try {
+        await loginFormRef.value.validate()
+        loading.value = true
+        
         const res = await login(loginForm.value)
+        console.log('登录响应:', res.data)
+        
         if (res.data.code === 1000) {
-          // 直接从 data 中获取数据
           const { token, userID, username } = res.data.data
           
+          // 存储用户信息
           store.commit('SET_TOKEN', token)
           store.commit('SET_USERINFO', { userID, username })
-          ElMessage.success('登录成功')
           
           // 检查是否是管理员账号
-          if (await isAdmin(userID)) { // 使用正确的 userID
-            router.push('/board-manage')
+          const isAdminUser = await isAdmin(userID)
+          console.log('是否是管理员:', isAdminUser)
+          
+          if (isAdminUser) {
+            ElMessage.success('管理员登录成功')
+            router.push('/admin')
             return
           }
           
           // 如果是管理员登录页面但不是管理员账号
-          if (props.isAdminLogin && !(await isAdmin(userID))) { // 使用正确的 userID
+          if (props.isAdminLogin) {
             ElMessage.error('非管理员账号，请使用管理员账号登录')
+            store.commit('CLEAR_USER_INFO')
             return
           }
           
-          // 如果有重定向地址则跳转到重定向地址
+          ElMessage.success('登录成功')
           const redirect = route.query.redirect
           router.push(redirect || '/')
         } else {
-          ElMessage.error(res.data.msg || '登录失败') // 使用 msg 而不是 message
+          ElMessage.error(res.data.msg || '登录失败')
         }
       } catch (error) {
         console.error('登录错误:', error)
-        ElMessage.error('登录失败')
+        ElMessage.error(error.message || '登录失败')
       } finally {
         loading.value = false
       }
     }
-  })
-}
 
     // 跳转到管理员登录页面
     const goToAdminLogin = () => {
