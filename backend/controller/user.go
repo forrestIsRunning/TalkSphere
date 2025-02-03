@@ -5,10 +5,16 @@ import (
 	"TalkSphere/models"
 	"TalkSphere/pkg/encrypt"
 	"TalkSphere/pkg/jwt"
+	"TalkSphere/pkg/rbac"
 	"TalkSphere/pkg/snowflake"
 	"TalkSphere/pkg/upload"
 	"TalkSphere/setting"
+	"fmt"
+	"strconv"
+
+	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // RegisterParams 注册请求参数
@@ -77,6 +83,25 @@ func RegisterHandler(c *gin.Context) {
 	if err := mysql.DB.Create(&user).Error; err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
+	}
+
+	// 如果注册的是 admin 用户，自动设置为管理员
+	if params.Username == "admin" {
+		enforcer, exists := c.Get("enforcer")
+		if !exists {
+			enforcer = rbac.Enforcer
+		}
+
+		e := enforcer.(*casbin.Enforcer)
+		_, err := e.AddRoleForUser(fmt.Sprintf("%d", user.ID), "admin")
+		if err != nil {
+			zap.L().Error("设置管理员角色失败", zap.Error(err))
+		} else {
+			// 保存策略到数据库
+			if err := e.SavePolicy(); err != nil {
+				zap.L().Error("保存策略失败", zap.Error(err))
+			}
+		}
 	}
 
 	ResponseSuccess(c, user)
@@ -221,4 +246,32 @@ func GetUserProfile(c *gin.Context) {
 	}
 
 	ResponseSuccess(c, response)
+}
+
+// CheckAdminPermission 检查用户是否具有 admin 权限
+func CheckAdminPermission(c *gin.Context) {
+	// 从URL参数获取用户ID
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	enforcer, exists := c.Get("enforcer")
+	if !exists {
+		enforcer = rbac.Enforcer
+	}
+
+	e := enforcer.(*casbin.Enforcer)
+
+	// 检查用户是否有 admin 角色
+	isAdmin, err := e.HasRoleForUser(fmt.Sprintf("%d", userID), "admin")
+	if err != nil {
+		zap.L().Error("检查管理员权限失败", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	ResponseSuccess(c, gin.H{"is_admin": isAdmin})
 }
