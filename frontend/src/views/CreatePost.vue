@@ -55,7 +55,7 @@
         <el-form-item label="上传图片">
           <el-upload
             class="upload-demo"
-            :action="`${baseURL}/posts/image`"
+            :action="`${baseURL}/api/posts/image`"
             :headers="uploadHeaders"
             :on-success="handleImageSuccess"
             :on-remove="handleImageRemove"
