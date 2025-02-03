@@ -137,7 +137,7 @@ import { getPostComments, createComment } from '../api/comment'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { Star, ChatLineRound } from '@element-plus/icons-vue'
-import { getUserById } from '../api/user'
+import { getUserProfile } from '../api/user'
 import { toggleLike, getLikeStatus } from '../api/like'
 
 export default {
@@ -265,9 +265,9 @@ export default {
       }
     }
 
-    const getAuthorInfo = async (authorId) => {
+    const getAuthorInfo = async () => {
       try {
-        const { data } = await getUserById(authorId)
+        const { data } = await getUserProfile()
         if (data.code === 1000) {
           authorName.value = data.data.username
         }
