@@ -13,7 +13,7 @@
         />
         <el-upload
           class="avatar-uploader"
-          :action="`${baseURL}/avatar`"
+          :action="`${baseURL}/api/avatar`"
           :headers="uploadHeaders"
           :show-file-list="false"
           :on-success="handleAvatarSuccess"
@@ -30,7 +30,7 @@
             v-if="!isEditingBio" 
             type="primary" 
             link
-            @click="startEditBio"
+            @click="editBio"
           >编辑</el-button>
         </div>
         <div v-if="!isEditingBio" class="bio-content">
@@ -121,6 +121,11 @@ export default {
       return isValidType && isLt2M
     }
 
+    const editBio = () => {
+      editingBio.value = userProfile.value.bio
+      isEditingBio.value = true
+    }
+
     const saveBio = async () => {
       try {
         const res = await updateBio({ bio: editingBio.value })
@@ -161,6 +166,7 @@ export default {
       uploadData,
       handleAvatarSuccess,
       beforeAvatarUpload,
+      editBio,
       saveBio,
       cancelEditBio
     }
