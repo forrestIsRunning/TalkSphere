@@ -3,7 +3,7 @@ import request from '../utils/request'
 // 点赞/取消点赞
 export function toggleLike(data) {
   return request({
-    url: '/likes',
+    url: 'api/likes',
     method: 'post',
     data
   })
@@ -12,7 +12,7 @@ export function toggleLike(data) {
 // 获取点赞状态
 export function getLikeStatus(targetId, targetType) {
   return request({
-    url: `/likes/status`,
+    url: `api/likes/status`,
     method: 'get',
     params: {
       target_id: targetId,
