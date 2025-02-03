@@ -248,7 +248,6 @@ func GetUserProfile(c *gin.Context) {
 	ResponseSuccess(c, response)
 }
 
-// CheckAdminPermission 检查用户是否具有 admin 权限
 func CheckAdminPermission(c *gin.Context) {
 	// 从URL参数获取用户ID
 	userIDStr := c.Param("id")

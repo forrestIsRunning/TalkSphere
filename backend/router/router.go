@@ -20,11 +20,10 @@ func Setup() *gin.Engine {
 	r := gin.Default()
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
 	//r.POST("/auth/check", controller.CheckPermission)
-	r.GET("/user/check/:id", controller.CheckAdminPermission)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	apiGroup := r.Group("/api")
-	apiGroup.Use(cors.New(cors.Config{
+	// 添加 CORS 中间件到所有路由
+	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type", "Accept"},
@@ -33,6 +32,11 @@ func Setup() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	r.POST("/login", controller.LoginHandler)
+	r.POST("/register", controller.RegisterHandler)
+	r.GET("/user/check/:id", controller.CheckAdminPermission)
+
+	apiGroup := r.Group("/api")
 	RegisterUserRoutes(apiGroup)
 	InitBoardRouter(apiGroup)
 	InitPostRouter(apiGroup)

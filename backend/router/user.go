@@ -8,11 +8,6 @@ import (
 )
 
 func RegisterUserRoutes(r *gin.RouterGroup) {
-	// 公开路由 - 不需要登录
-	r.POST("/register", controller.RegisterHandler)
-	r.POST("/login", controller.LoginHandler)
-
-	// 需要登录的路由 - 使用路由组
 	authGroup := r.Group("")
 	authGroup.Use(middleware.JWTAuthMiddleware())
 	{
