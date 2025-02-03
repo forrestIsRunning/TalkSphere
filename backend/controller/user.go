@@ -19,9 +19,11 @@ import (
 
 // RegisterParams 注册请求参数
 type RegisterParams struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	Email    string `json:"email" binding:"required"`
+	Username  string `json:"username" binding:"required"`
+	Password  string `json:"password" binding:"required"`
+	Email     string `json:"email" binding:"required"`
+	Bio       string `json:"bio"`
+	AvatarUrl string `json:"avatar_url"`
 }
 
 // LoginParams 登录请求参数
@@ -69,13 +71,19 @@ func RegisterHandler(c *gin.Context) {
 
 	// 4. 创建用户
 	userID := snowflake.GenID()
+	if params.Bio == "" {
+		params.Bio = "no bio"
+	}
+	if params.AvatarUrl == "" {
+		params.AvatarUrl = setting.Conf.DefaultAvatar.AvatarURL
+	}
 	user = models.User{
 		ID:           userID,
 		Username:     params.Username,
 		PasswordHash: encrypt.EncryptPassword(params.Password),
 		Email:        params.Email,
-		AvatarURL:    setting.Conf.DefaultAvatar.AvatarURL,
-		Bio:          "no bio",
+		AvatarURL:    params.AvatarUrl,
+		Bio:          params.Bio,
 		Status:       1,
 		LastLoginAt:  nil,
 	}
