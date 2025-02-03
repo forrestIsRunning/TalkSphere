@@ -25,6 +25,8 @@
 </template>
 
 <script>
+import request from '@/utils/request'
+
 export default {
   name: 'AdminDashboard',
   data() {
@@ -35,6 +37,24 @@ export default {
         boardCount: 0
       }
     }
+  },
+  methods: {
+    async fetchStats() {
+      try {
+        const res = await request({
+          url: '/api/admin/stats',
+          method: 'get'
+        })
+        if (res.data.code === 1000) {
+          this.stats = res.data.data
+        }
+      } catch (error) {
+        console.error('获取统计数据失败:', error)
+      }
+    }
+  },
+  mounted() {
+    this.fetchStats()
   }
 }
 </script>
@@ -48,4 +68,4 @@ export default {
   text-align: center;
   padding: 20px;
 }
-</style> 
+</style>

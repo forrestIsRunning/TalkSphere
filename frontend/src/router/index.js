@@ -4,12 +4,13 @@ import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
 import UserProfile from '../views/UserProfile.vue'
 import store from '../store'
-import { getUserProfile } from '../api/user'
 import { ElMessage } from 'element-plus'
 import { isAdmin } from '@/utils/permission'
 
 import CreatePost from '../views/CreatePost.vue'
 import PostDetail from '../views/PostDetail.vue'
+import AdminHome from '../views/AdminHome.vue'
+import {getUserProfile} from "@/api/user";
 
 const routes = [
   {
@@ -53,13 +54,37 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/board-manage',
-    name: 'BoardManage',
-    component: () => import('@/views/BoardManage.vue'),
-    meta: {
+    path: '/admin',
+    component: AdminHome,
+    meta: { 
       requiresAuth: true,
-      requiresAdmin: true // 需要管理员权限
-    }
+      requiresAdmin: true 
+    },
+    children: [
+      {
+        path: '',  // 默认子路由
+        redirect: '/admin/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: () => import('../views/Dashboard.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'users',
+        name: 'UserManagement',
+        component: () => import('../views/UserManagement.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'boards',
+        name: 'BoardManagement',
+        component: () => import('../views/BoardManagement.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      // ... 其他管理页面路由
+    ]
   }
 ]
 

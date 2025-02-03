@@ -274,3 +274,48 @@ func CheckAdminPermission(c *gin.Context) {
 
 	ResponseSuccess(c, gin.H{"is_admin": isAdmin})
 }
+func GetUserLists(c *gin.Context) {
+	// 获取分页参数
+	page, size := getPageInfo(c)
+
+	// 查询用户列表
+	var users []models.User
+	var total int64
+
+	// 计算总数
+	result := mysql.DB.Model(&models.User{}).Where("status = ?", 1).Count(&total)
+	if result.Error != nil {
+		zap.L().Error("获取用户总数失败", zap.Error(result.Error))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 分页查询用户列表
+	result = mysql.DB.Where("status = ?", 1).
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Find(&users)
+	if result.Error != nil {
+		zap.L().Error("获取用户列表失败", zap.Error(result.Error))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 构造返回数据
+	userList := make([]gin.H, 0, len(users))
+	for _, user := range users {
+		userList = append(userList, gin.H{
+			"id":         user.ID,
+			"username":   user.Username,
+			"email":      user.Email,
+			"avatar":     user.AvatarURL,
+			"bio":        user.Bio,
+			"created_at": user.CreatedAt,
+		})
+	}
+
+	ResponseSuccess(c, gin.H{
+		"total": total,
+		"users": userList,
+	})
+}

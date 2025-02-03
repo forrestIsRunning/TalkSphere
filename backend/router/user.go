@@ -14,5 +14,6 @@ func RegisterUserRoutes(r *gin.RouterGroup) {
 		authGroup.GET("/profile", controller.GetUserProfile)
 		authGroup.POST("/bio", controller.UpdateUserBio)
 		authGroup.POST("/avatar", controller.UpdateUserAvatar)
+		authGroup.GET("/users", middleware.AdminRequired(), controller.GetUserLists)
 	}
 }
