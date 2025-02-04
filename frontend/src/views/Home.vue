@@ -6,6 +6,27 @@
         <div class="left">
           <h1 class="logo">TalkSphere</h1>
         </div>
+        <div class="center">
+          <div class="search-section">
+            <el-input
+              v-model="searchQuery"
+              placeholder="搜索用户名或帖子内容..."
+              class="search-input"
+              clearable
+              style="min-width: 400px"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-select v-model="searchType" class="search-type">
+              <el-option label="全部" value="all" />
+              <el-option label="用户名" value="username" />
+              <el-option label="帖子内容" value="content" />
+            </el-select>
+            <el-button type="primary" @click="handleSearch">搜索</el-button>
+          </div>
+        </div>
         <div class="right">
           <el-button 
             type="primary" 
@@ -53,26 +74,6 @@
 
       <!-- 右侧内容区 -->
       <div class="content-area">
-        <!-- 搜索区域 -->
-        <div class="search-section">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索用户名或帖子内容..."
-            class="search-input"
-            clearable
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-          <el-select v-model="searchType" class="search-type">
-            <el-option label="全部" value="all" />
-            <el-option label="用户名" value="username" />
-            <el-option label="帖子内容" value="content" />
-          </el-select>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-        </div>
-
         <!-- 欢迎信息 -->
         <div v-if="!selectedBoardId" class="welcome-message">
           <h2>欢迎来到 TalkSphere</h2>
@@ -130,9 +131,6 @@
 
             <div class="post-cover" v-if="post.images?.length">
               <el-image :src="post.images[0].ImageURL" fit="cover" />
-            </div>
-            <div class="post-content" v-else>
-              <p class="post-excerpt">{{ post.content?.slice(0, 100) }}...</p>
             </div>
           </div>
         </div>
@@ -390,10 +388,22 @@ export default {
   margin: 0;
 }
 
+.left {
+  width: 200px;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
 .right {
+  width: 200px;
   display: flex;
   align-items: center;
   gap: 16px;
+  justify-content: flex-end;
 }
 
 .main-wrapper {
@@ -401,7 +411,7 @@ export default {
   padding-top: 60px;
   max-width: 1440px;
   margin: 0 auto;
-  height: calc(100vh - 60px); /* 设置主容器高度为视口高度减去顶部导航栏高度 */
+  height: calc(100vh - 60px);
 }
 
 .side-nav {
@@ -411,7 +421,6 @@ export default {
   height: 100%;
   position: fixed;
   background: #fff;
-  overflow-y: auto;
 }
 
 .nav-item {
@@ -432,8 +441,6 @@ export default {
   flex: 1;
   margin-left: 240px;
   padding: 20px;
-  height: 100%;
-  overflow-y: auto; /* 添加垂直滚动条 */
 }
 
 .operation-bar {
@@ -466,8 +473,6 @@ export default {
 .post-list {
   background: #fff;
   border-radius: 4px;
-  max-height: calc(100vh - 250px); /* 设置帖子列表最大高度 */
-  overflow-y: auto; /* 添加垂直滚动条 */
 }
 
 .post-item {
@@ -476,8 +481,8 @@ export default {
   cursor: pointer;
   display: flex;
   gap: 16px;
-  max-height: 200px; /* 设置每个帖子项的最大高度 */
-  overflow: hidden; /* 超出部分隐藏 */
+  max-height: 200px;
+  overflow: hidden;
 }
 
 .post-item:hover {
