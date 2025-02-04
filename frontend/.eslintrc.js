@@ -17,5 +17,11 @@ module.exports = {
       'x-invalid-end-tag': false
     }],
     'vue/multi-word-component-names': 'off'
+  },
+  globals: {
+    defineProps: 'readonly',
+    defineEmits: 'readonly',
+    defineExpose: 'readonly',
+    withDefaults: 'readonly'
   }
 } 

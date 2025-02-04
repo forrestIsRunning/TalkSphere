@@ -371,32 +371,6 @@ func UpdatePost(c *gin.Context) {
 	ResponseSuccess(c, nil)
 }
 
-// GetUserPosts 获取用户的帖子列表
-func GetUserPosts(c *gin.Context) {
-	userIDStr := c.Param("user_id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
-		ResponseError(c, CodeInvalidParam)
-		return
-	}
-
-	page, size := getPageInfo(c)
-	var posts []models.Post
-	var total int64
-
-	db := mysql.DB.Model(&models.Post{}).Where("author_id = ? AND status != -1", userID)
-	db.Count(&total)
-	if err := db.Preload("Tags").Offset(int((page - 1) * size)).Limit(int(size)).Find(&posts).Error; err != nil {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-
-	ResponseSuccess(c, gin.H{
-		"posts": posts,
-		"total": total,
-	})
-}
-
 // GetBoardPosts 获取板块帖子列表
 func GetBoardPosts(c *gin.Context) {
 	// 获取板块ID
@@ -572,4 +546,304 @@ func UploadPostImage(c *gin.Context) {
 		"image_id":  postImage.ID,
 		"image_url": imageURL,
 	})
+}
+
+// GetUserPosts 获取用户的帖子列表
+func GetUserPosts(c *gin.Context) {
+	zap.L().Info("开始获取用户帖子列表")
+
+	// 从上下文获取用户ID
+	userIDInterface, exists := c.Get(CtxtUserID)
+	if !exists {
+		zap.L().Error("未找到用户ID")
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+
+	userID, ok := userIDInterface.(int64)
+	if !ok {
+		zap.L().Error("用户ID类型断言失败",
+			zap.Any("userIDInterface", userIDInterface))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
+
+	// 获取分页参数
+	page, size := getPageInfo(c)
+	zap.L().Info("获取分页参数",
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	var posts []models.Post
+	var total int64
+
+	// 构建查询
+	db := mysql.DB.Model(&models.Post{}).Where("author_id = ? AND status != -1", userID)
+
+	// 获取总数
+	if err := db.Count(&total).Error; err != nil {
+		zap.L().Error("获取帖子总数失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("获取到帖子总数", zap.Int64("total", total))
+
+	// 查询帖子数据
+	if err := db.Preload("Author").
+		Preload("Tags").
+		Preload("Images").
+		Order("created_at DESC").
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Find(&posts).Error; err != nil {
+		zap.L().Error("查询用户帖子失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	zap.L().Info("成功查询用户帖子",
+		zap.Int("post_count", len(posts)),
+		zap.Int64("user_id", userID))
+
+	// 记录每个帖子的基本信息
+	for i, post := range posts {
+		zap.L().Debug("帖子详情",
+			zap.Int("index", i),
+			zap.Int64("post_id", post.ID),
+			zap.String("title", post.Title),
+			zap.Int64("author_id", *post.AuthorID),
+			zap.Int("tag_count", len(post.Tags)),
+			zap.Int("image_count", len(post.Images)))
+	}
+
+	ResponseSuccess(c, gin.H{
+		"posts":        posts,
+		"total":        total,
+		"current_page": page,
+		"page_size":    size,
+	})
+}
+
+// GetUserLikedPosts 获取用户点赞的帖子
+func GetUserLikedPosts(c *gin.Context) {
+	zap.L().Info("开始获取用户点赞的帖子")
+
+	// 从上下文获取用户ID
+	userIDInterface, exists := c.Get(CtxtUserID)
+	if !exists {
+		zap.L().Error("未找到用户ID")
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+
+	userID, ok := userIDInterface.(int64)
+	if !ok {
+		zap.L().Error("用户ID类型断言失败",
+			zap.Any("userIDInterface", userIDInterface))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
+
+	// 获取分页参数
+	page, size := getPageInfo(c)
+	zap.L().Info("获取分页参数",
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	// 获取帖子和总数
+	posts, total, err := getUserLikedPosts(userID, page, size)
+	if err != nil {
+		zap.L().Error("获取用户点赞帖子失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("成功获取用户点赞帖子",
+		zap.Int64("total", total),
+		zap.Int("post_count", len(posts)))
+
+	ResponseSuccess(c, gin.H{
+		"posts":        posts,
+		"total":        total,
+		"current_page": page,
+		"page_size":    size,
+	})
+}
+
+func getUserLikedPosts(userID int64, page, size int64) ([]models.Post, int64, error) {
+	zap.L().Info("开始查询用户点赞帖子",
+		zap.Int64("user_id", userID),
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	var posts []models.Post
+	var total int64
+
+	// 构建基础查询
+	db := mysql.DB.Table("posts").
+		Joins("JOIN likes ON posts.id = likes.target_id").
+		Where("likes.user_id = ? AND likes.target_type = 1 AND posts.status != -1", userID)
+
+	// 获取总数
+	if err := db.Count(&total).Error; err != nil {
+		zap.L().Error("获取点赞帖子总数失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID))
+		return nil, 0, err
+	}
+	zap.L().Info("获取到点赞帖子总数", zap.Int64("total", total))
+
+	// 查询帖子数据
+	err := db.Preload("Author").
+		Preload("Tags").
+		Preload("Images").
+		Order("likes.created_at DESC").
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Find(&posts).Error
+
+	if err != nil {
+		zap.L().Error("查询点赞帖子详情失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		return nil, 0, err
+	}
+
+	zap.L().Info("成功查询点赞帖子详情",
+		zap.Int("post_count", len(posts)),
+		zap.Int64("user_id", userID))
+
+	// 记录每个帖子的基本信息
+	for i, post := range posts {
+		zap.L().Debug("帖子详情",
+			zap.Int("index", i),
+			zap.Int64("post_id", post.ID),
+			zap.String("title", post.Title),
+			zap.Int64("author_id", *post.AuthorID),
+			zap.Int("tag_count", len(post.Tags)),
+			zap.Int("image_count", len(post.Images)))
+	}
+
+	return posts, total, nil
+}
+
+// GetUserFavoritePosts 获取用户收藏的帖子
+func GetUserFavoritePosts(c *gin.Context) {
+	zap.L().Info("开始获取用户收藏的帖子")
+
+	userIDInterface, exists := c.Get(CtxtUserID)
+	if !exists {
+		zap.L().Error("未找到用户ID")
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+
+	userID, ok := userIDInterface.(int64)
+	if !ok {
+		zap.L().Error("用户ID类型断言失败",
+			zap.Any("userIDInterface", userIDInterface))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
+
+	// 获取分页参数
+	page, size := getPageInfo(c)
+	zap.L().Info("获取分页参数",
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	// 获取帖子和总数
+	posts, total, err := getUserFavoritePosts(userID, page, size)
+	if err != nil {
+		zap.L().Error("获取用户收藏帖子失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("成功获取用户收藏帖子",
+		zap.Int64("total", total),
+		zap.Int("post_count", len(posts)))
+
+	ResponseSuccess(c, gin.H{
+		"posts":        posts,
+		"total":        total,
+		"current_page": page,
+		"page_size":    size,
+	})
+}
+
+func getUserFavoritePosts(userID int64, page, size int64) ([]models.Post, int64, error) {
+	zap.L().Info("开始查询用户收藏帖子",
+		zap.Int64("user_id", userID),
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	var posts []models.Post
+	var total int64
+
+	// 构建基础查询
+	db := mysql.DB.Table("posts").
+		Joins("JOIN favorites ON posts.id = favorites.post_id").
+		Where("favorites.user_id = ? AND posts.status != -1", userID)
+
+	// 获取总数
+	if err := db.Count(&total).Error; err != nil {
+		zap.L().Error("获取收藏帖子总数失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID))
+		return nil, 0, err
+	}
+	zap.L().Info("获取到收藏帖子总数", zap.Int64("total", total))
+
+	// 查询帖子数据
+	err := db.Preload("Author").
+		Preload("Tags").
+		Preload("Images").
+		Order("favorites.created_at DESC").
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Find(&posts).Error
+
+	if err != nil {
+		zap.L().Error("查询收藏帖子详情失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		return nil, 0, err
+	}
+
+	zap.L().Info("成功查询收藏帖子详情",
+		zap.Int("post_count", len(posts)),
+		zap.Int64("user_id", userID))
+
+	// 记录每个帖子的基本信息
+	for i, post := range posts {
+		zap.L().Debug("帖子详情",
+			zap.Int("index", i),
+			zap.Int64("post_id", post.ID),
+			zap.String("title", post.Title),
+			zap.Int64("author_id", *post.AuthorID),
+			zap.Int("tag_count", len(post.Tags)),
+			zap.Int("image_count", len(post.Images)))
+	}
+
+	return posts, total, nil
 }

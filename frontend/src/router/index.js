@@ -85,6 +85,24 @@ const routes = [
       },
       // ... 其他管理页面路由
     ]
+  },
+  {
+    path: '/user/likes',
+    name: 'UserLikes',
+    component: () => import('@/views/user/UserLikes.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/favorites',
+    name: 'UserFavorites',
+    component: () => import('@/views/user/UserFavorites.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/posts',
+    name: 'UserPosts',
+    component: () => import('@/views/user/UserPosts.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

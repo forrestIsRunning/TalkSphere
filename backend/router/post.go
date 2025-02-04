@@ -19,10 +19,16 @@ func RegisterPostRouter(r *gin.RouterGroup) {
 	postGroup.DELETE("/:id", controller.DeletePost)
 	// 更新帖子
 	postGroup.PUT("/:id", controller.UpdatePost)
-	// 获取用户的帖子列表
-	postGroup.GET("/user/:user_id", controller.GetUserPosts)
+
 	// 获取板块下的帖子列表
 	postGroup.GET("/board/:board_id", controller.GetBoardPosts)
+
+	// 获取用户发表的帖子列表
+	postGroup.GET("/user", controller.GetUserPosts)
+	//获取用户点赞帖子
+	postGroup.GET("/user/likes", controller.GetUserLikedPosts)
+	//获取用户收藏帖子
+	postGroup.GET("/user/favorites", controller.GetUserFavoritePosts)
 
 	//照片上传
 	postGroup.POST("/image", controller.UploadPostImage)

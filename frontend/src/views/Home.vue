@@ -14,22 +14,28 @@
             发表帖子
           </el-button>
           <div class="user-info" v-if="userInfo">
-            <el-dropdown trigger="click">
-              <el-avatar 
-                :size="40" 
-                :src="userInfo.avatar || defaultAvatar"
-              />
+            <el-dropdown trigger="click" @command="handleCommand">
+              <div class="avatar-container">
+                <el-avatar 
+                  :size="40" 
+                  :src="userInfo.avatar || defaultAvatar"
+                />
+              </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item @click="$router.push('/profile')">个人资料</el-dropdown-item>
-                  <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
+                  <el-dropdown-item command="profile">个人资料</el-dropdown-item>
+                  <el-dropdown-item command="posts">我的帖子</el-dropdown-item>
+                  <el-dropdown-item command="likes">我的点赞</el-dropdown-item>
+                  <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
+                  <el-dropdown-item command="comments">我的评论</el-dropdown-item>
+                  <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
           </div>
         </div>
       </div>
-    </div>image.png
+    </div>
 
     <div class="main-wrapper">
       <!-- 左侧板块列表 -->
@@ -275,9 +281,28 @@ export default {
       loadPosts()
     }
 
-    const handleLogout = () => {
-      store.dispatch('logout')
-      router.push('/login')
+    const handleCommand = (command) => {
+      switch (command) {
+        case 'profile':
+          router.push('/profile')
+          break
+        case 'posts':
+          router.push('/user/posts')
+          break
+        case 'likes':
+          router.push('/user/likes')
+          break
+        case 'favorites':
+          router.push('/user/favorites')
+          break
+        case 'comments':
+          router.push('/user/comments')
+          break
+        case 'logout':
+          store.dispatch('logout')
+          router.push('/login')
+          break
+      }
     }
 
     const loadUserInfo = async () => {
@@ -321,7 +346,7 @@ export default {
       selectBoard,
       handleSizeChange,
       handleCurrentChange,
-      handleLogout,
+      handleCommand,
       searchQuery,
       searchType,
       loading,
@@ -614,5 +639,9 @@ export default {
 
 .search-type {
   width: 120px;
+}
+
+.avatar-container {
+  cursor: pointer;
 }
 </style> 
