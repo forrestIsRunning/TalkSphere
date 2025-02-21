@@ -89,6 +89,12 @@ const routes = [
         component: () => import('../views/analytics/WordCloud.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
       },
+      {
+        path: 'analytics/users',
+        name: 'UserGrowth',
+        component: () => import('../views/analytics/UserGrowth.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
       // ... 其他管理页面路由
     ]
   },
