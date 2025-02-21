@@ -42,5 +42,6 @@ func Setup() *gin.Engine {
 	RegisterPostRouter(apiGroup)
 	RegisterInteractionRoutes(apiGroup)
 	RegisterStatsRoutes(apiGroup)
+	RegisterAnalysisRouter(apiGroup)
 	return r
 }
