@@ -1,7 +1,7 @@
 <template>
   <el-container class="admin-container">
     <!-- 左侧导航栏 -->
-    <el-aside width="200px" class="aside">
+    <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo">
         <h2>TalkSphere Admin</h2>
       </div>
@@ -11,6 +11,7 @@
         background-color="#304156"
         text-color="#bfcbd9"
         active-text-color="#409EFF"
+        :collapse="isCollapse"
         :router="true"
       >
         <el-menu-item index="/admin/dashboard">
@@ -40,6 +41,7 @@
           <el-menu-item index="/admin/analytics/users">用户增长</el-menu-item>
           <el-menu-item index="/admin/analytics/posts">帖子趋势</el-menu-item>
           <el-menu-item index="/admin/analytics/hot">热门分析</el-menu-item>
+          <el-menu-item index="/admin/analytics/wordcloud">词云图</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>

@@ -83,6 +83,12 @@ const routes = [
         component: () => import('../views/BoardManagement.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
       },
+      {
+        path: 'analytics/wordcloud',
+        name: 'WordCloud',
+        component: () => import('../views/analytics/WordCloud.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
       // ... 其他管理页面路由
     ]
   },
