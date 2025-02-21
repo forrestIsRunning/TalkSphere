@@ -95,6 +95,12 @@ const routes = [
         component: () => import('../views/analytics/UserGrowth.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
       },
+      {
+        path: 'analytics/posts',
+        name: 'PostGrowth',
+        component: () => import('../views/analytics/PostGrowth.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
       // ... 其他管理页面路由
     ]
   },

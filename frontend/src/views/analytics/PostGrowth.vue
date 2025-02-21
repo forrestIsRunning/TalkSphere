@@ -1,13 +1,13 @@
 <template>
-  <div class="user-growth">
-    <h2>用户增长分析</h2>
+  <div class="post-growth">
+    <h2>帖子增长分析</h2>
     
     <el-row :gutter="20">
       <el-col :span="24">
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
-              <span>每日用户增长</span>
+              <span>每日帖子增长</span>
               <span class="subtitle">最近7天</span>
             </div>
           </template>
@@ -19,7 +19,7 @@
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
-              <span>每周用户增长</span>
+              <span>每周帖子增长</span>
               <span class="subtitle">最近7周</span>
             </div>
           </template>
@@ -31,7 +31,7 @@
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
-              <span>每月用户增长</span>
+              <span>每月帖子增长</span>
               <span class="subtitle">最近6个月</span>
             </div>
           </template>
@@ -78,7 +78,7 @@ const initChart = (el, title) => {
     },
     yAxis: {
       type: 'value',
-      name: '新增用户数'
+      name: '新增帖子数'
     },
     series: [
       {
@@ -90,10 +90,12 @@ const initChart = (el, title) => {
           opacity: 0.3
         },
         lineStyle: {
-          width: 2
+          width: 2,
+          color: '#67C23A' // 使用绿色来区分用户增长图表
         },
         itemStyle: {
-          borderWidth: 2
+          borderWidth: 2,
+          color: '#67C23A'
         }
       }
     ]
@@ -124,7 +126,7 @@ const updateChart = (chart, data, title) => {
 const fetchData = async () => {
   try {
     const res = await request({
-      url: '/api/analysis/users/growth',
+      url: '/api/analysis/posts/growth',
       method: 'get'
     })
     
@@ -138,7 +140,7 @@ const fetchData = async () => {
       ElMessage.error(res.data.msg || '获取数据失败')
     }
   } catch (error) {
-    console.error('获取用户增长数据失败:', error)
+    console.error('获取帖子增长数据失败:', error)
     ElMessage.error('获取数据失败')
   }
 }
@@ -169,7 +171,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.user-growth {
+.post-growth {
   padding: 20px;
 }
 
