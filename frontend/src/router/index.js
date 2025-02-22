@@ -11,7 +11,6 @@ import CreatePost from '../views/CreatePost.vue'
 import PostDetail from '../views/PostDetail.vue'
 import AdminHome from '../views/AdminHome.vue'
 import {getUserProfile} from "@/api/user";
-import HotAnalysis from '@/views/analytics/HotAnalysis.vue'
 
 const routes = [
   {
@@ -84,35 +83,59 @@ const routes = [
         component: () => import('../views/BoardManagement.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
       },
+      //DONE
       {
-        path: 'analytics/wordcloud',
-        name: 'WordCloud',
-        component: () => import('../views/analytics/WordCloud.vue'),
-        meta: { requiresAuth: true, requiresAdmin: true }
-      },
-      {
-        path: 'analytics/users',
+        path: 'analytics/users/growth', 
         name: 'UserGrowth',
-        component: () => import('../views/analytics/UserGrowth.vue'),
-        meta: { requiresAuth: true, requiresAdmin: true }
-      },
-      {
-        path: 'analytics/posts',
-        name: 'PostGrowth',
-        component: () => import('../views/analytics/PostGrowth.vue'),
-        meta: { requiresAuth: true, requiresAdmin: true }
-      },
-      {
-        path: 'analytics/hot',
-        name: 'HotAnalysis',
-        component: HotAnalysis,
+        component: () => import('@/views/analytics/UserGrowth.vue'),
         meta: {
           requiresAuth: true,
           requiresAdmin: true,
-          title: '热门分析'
+          title: '用户增长'
         }
       },
-      // ... 其他管理页面路由
+      //DONE
+      {
+        path: 'analytics/active/users',
+        name: 'ActiveUsers',
+        component: () => import('@/views/analytics/ActiveUsers.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+          title: '最近活跃用户'
+        }
+      },
+      //DONE
+      {
+        path: 'analytics/posts/growth', 
+        name: 'PostsGrowth',
+        component: () => import('@/views/analytics/PostGrowth.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+          title: '帖子增长'
+        }
+      },
+      {
+        path: 'analytics/hot/posts',
+        name: 'HotPosts',
+        component: () => import('@/views/analytics/HotPosts.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+          title: '最近活跃帖子'
+        }
+      },
+      {
+        path: 'analytics/wordcloud',
+        name: 'WordCloud',
+        component: () => import('@/views/analytics/WordCloud.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+          title: '词云图'
+        }
+      },
     ]
   },
   {

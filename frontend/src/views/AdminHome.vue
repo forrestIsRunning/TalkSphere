@@ -43,9 +43,11 @@
             <el-icon><TrendCharts /></el-icon>
             <span>数据分析</span>
           </template>
-          <el-menu-item index="/admin/analytics/users">用户增长</el-menu-item>
-          <el-menu-item index="/admin/analytics/posts">帖子趋势</el-menu-item>
-          <el-menu-item index="/admin/analytics/hot">热门分析</el-menu-item>
+          <el-menu-item index="/admin/analytics/users/growth">用户增长</el-menu-item>
+          <el-menu-item index="/admin/analytics/active/users">最近活跃用户</el-menu-item>
+
+          <el-menu-item index="/admin/analytics/posts/growth">帖子增长</el-menu-item>
+          <el-menu-item index="/admin/analytics/hot/posts">最近活跃帖子</el-menu-item>
           <el-menu-item index="/admin/analytics/wordcloud">词云图</el-menu-item>
         </el-sub-menu>
       </el-menu>
@@ -115,9 +117,13 @@ const currentPath = computed(() => {
     '/admin/users': '用户列表',
     '/admin/permissions': '权限管理',
     '/admin/boards': '板块管理',
-    '/admin/analytics/users': '用户增长',
-    '/admin/analytics/posts': '帖子趋势',
-    '/admin/analytics/hot': '热门分析'
+    '/admin/analytics/users/growth': '用户增长分析',
+    '/admin/analytics/active/users': '最近活跃用户',
+
+    '/admin/analytics/active/posts/growth': '帖子增长分析',
+    '/admin/analytics/hot/posts': '最近活跃帖子',
+
+    '/admin/analytics/wordcloud': '词云图'
   }
   return pathMap[route.path] || '仪表盘'
 })

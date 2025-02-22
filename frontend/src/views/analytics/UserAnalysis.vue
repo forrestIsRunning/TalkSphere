@@ -1,6 +1,6 @@
 <template>
-  <div class="hot-analysis">
-    <h2>热门用户分析</h2>
+  <div class="user-analysis">
+    <h2>活跃用户分析</h2>
     
     <el-card class="filter-card">
       <el-radio-group v-model="timeRange" @change="fetchData">
@@ -10,20 +10,27 @@
       </el-radio-group>
     </el-card>
 
-    <el-card class="user-list">
-      <el-table :data="activeUsers" stripe>
+    <el-card v-loading="loading" class="user-list">
+      <el-table 
+        :data="activeUsers" 
+        stripe
+        height="600"
+      >
         <el-table-column label="排名" type="index" width="80" align="center" />
         
         <el-table-column label="用户信息" min-width="200">
           <template #default="{ row }">
             <div class="user-info">
               <el-avatar :src="row.avatar_url" :size="40" />
-              <span class="username">{{ row.username }}</span>
+              <div class="user-details">
+                <div class="username">{{ row.username }}</div>
+                <div class="user-id">ID: {{ row.user_id }}</div>
+              </div>
             </div>
           </template>
         </el-table-column>
 
-        <el-table-column label="活跃度指标" min-width="400">
+        <el-table-column label="互动数据" width="300">
           <template #default="{ row }">
             <div class="metrics">
               <el-tooltip content="发帖数量" placement="top">
@@ -36,14 +43,14 @@
               <el-tooltip content="获得点赞" placement="top">
                 <div class="metric-item">
                   <el-icon><Star /></el-icon>
-                  {{ row.like_received_count }}
+                  {{ row.like_count }}
                 </div>
               </el-tooltip>
               
               <el-tooltip content="获得收藏" placement="top">
                 <div class="metric-item">
                   <el-icon><Collection /></el-icon>
-                  {{ row.favorite_received_count }}
+                  {{ row.favorite_count }}
                 </div>
               </el-tooltip>
             </div>
@@ -63,7 +70,6 @@
           label="最后登录" 
           width="180" 
           align="center"
-          :formatter="formatDate"
         />
       </el-table>
 
@@ -95,9 +101,11 @@ import request from '@/utils/request'
 
 const timeRange = ref('daily')
 const activeUsers = ref([])
+const loading = ref(false)
 
 // 获取活跃用户数据
 const fetchData = async () => {
+  loading.value = true
   try {
     const res = await request({
       url: '/api/analysis/users/active',
@@ -108,20 +116,16 @@ const fetchData = async () => {
     })
     
     if (res.data.code === 1000) {
-      activeUsers.value = res.data.data.active_users
+      activeUsers.value = res.data.data.active_users || []
     } else {
       ElMessage.error(res.data.msg || '获取数据失败')
     }
   } catch (error) {
     console.error('获取活跃用户数据失败:', error)
     ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
   }
-}
-
-// 格式化日期
-const formatDate = (row) => {
-  if (!row.last_login_at) return '暂无记录'
-  return row.last_login_at
 }
 
 // 根据活跃度得分返回不同的标签类型
@@ -137,12 +141,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hot-analysis {
+.user-analysis {
   padding: 20px;
 }
 
 .filter-card {
   margin-bottom: 20px;
+}
+
+.user-list {
+  min-height: 400px;
 }
 
 .user-info {
@@ -151,8 +159,20 @@ onMounted(() => {
   gap: 12px;
 }
 
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .username {
   font-weight: 500;
+  font-size: 16px;
+}
+
+.user-id {
+  color: #909399;
+  font-size: 12px;
 }
 
 .metrics {
