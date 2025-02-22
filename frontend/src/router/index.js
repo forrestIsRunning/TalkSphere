@@ -11,6 +11,7 @@ import CreatePost from '../views/CreatePost.vue'
 import PostDetail from '../views/PostDetail.vue'
 import AdminHome from '../views/AdminHome.vue'
 import {getUserProfile} from "@/api/user";
+import HotAnalysis from '@/views/analytics/HotAnalysis.vue'
 
 const routes = [
   {
@@ -100,6 +101,16 @@ const routes = [
         name: 'PostGrowth',
         component: () => import('../views/analytics/PostGrowth.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'analytics/hot',
+        name: 'HotAnalysis',
+        component: HotAnalysis,
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+          title: '热门分析'
+        }
       },
       // ... 其他管理页面路由
     ]
