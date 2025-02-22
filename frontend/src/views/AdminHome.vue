@@ -6,13 +6,15 @@
         <h2>TalkSphere Admin</h2>
       </div>
       <el-menu
+        :default-openeds="['1', '2', '3']"
+        :collapse="isCollapse"
+        :collapse-transition="false"
+        :router="true"
         :default-active="activeMenu"
         class="el-menu-vertical"
         background-color="#304156"
         text-color="#bfcbd9"
         active-text-color="#409EFF"
-        :collapse="isCollapse"
-        :router="true"
       >
         <el-menu-item index="/admin/dashboard">
           <el-icon><DataLine /></el-icon>
@@ -28,12 +30,15 @@
           <el-menu-item index="/admin/permissions">权限管理</el-menu-item>
         </el-sub-menu>
 
-        <el-menu-item index="/admin/boards">
-          <el-icon><Grid /></el-icon>
-          <span>板块管理</span>
-        </el-menu-item>
-
         <el-sub-menu index="2">
+          <template #title>
+            <el-icon><Grid /></el-icon>
+            <span>板块管理</span>
+          </template>
+          <el-menu-item index="/admin/boards">板块列表</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="3">
           <template #title>
             <el-icon><TrendCharts /></el-icon>
             <span>数据分析</span>
