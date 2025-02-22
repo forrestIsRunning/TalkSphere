@@ -35,14 +35,8 @@ func GetActiveUsers(context *gin.Context) {
 
 // GetUsersGrowth 用户增长量
 func GetUsersGrowth(c *gin.Context) {
+	// 获取最近7天的完整日期列表
 	now := time.Now()
-
-	// 准备时间范围
-	sevenDaysAgo := now.AddDate(0, 0, -6) // 修改为-6，因为要包含今天
-	sevenWeeksAgo := now.AddDate(0, 0, -7*7)
-	sixMonthsAgo := now.AddDate(0, -6, 0)
-
-	// 准备结果数组
 	dailyGrowth := make([]GrowthData, 7)
 	weeklyGrowth := make([]GrowthData, 7)
 	monthlyGrowth := make([]GrowthData, 6)
@@ -58,7 +52,8 @@ func GetUsersGrowth(c *gin.Context) {
 
 		// 填充每周数据
 		if i < 7 {
-			weekYear, weekNum := now.AddDate(0, 0, -i*7).ISOWeek()
+			weekDate := now.AddDate(0, 0, -i*7)
+			weekYear, weekNum := weekDate.ISOWeek()
 			weeklyGrowth[i] = GrowthData{
 				Date:  fmt.Sprintf("%d-W%02d", weekYear, weekNum),
 				Count: 0,
@@ -75,76 +70,92 @@ func GetUsersGrowth(c *gin.Context) {
 		}
 	}
 
-	// 查询实际数据并更新
-	var actualDaily, actualWeekly, actualMonthly []GrowthData
+	// 查询每日数据
+	var dailyResults []GrowthData
+	err := mysql.DB.Raw(`
+        SELECT 
+            DATE(created_at) as date,
+            COUNT(*) as count
+        FROM users
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+    `).Find(&dailyResults).Error
 
-	// 查询每天的用户增长量
-	if err := mysql.DB.Table("users").
-		Select("DATE(created_at) as date, COUNT(*) as count").
-		Where("DATE(created_at) >= DATE(?)", sevenDaysAgo).
-		Group("DATE(created_at)").
-		Order("date DESC").
-		Find(&actualDaily).Error; err != nil {
+	if err != nil {
+		zap.L().Error("failed to query daily growth", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	// 查询每周的用户增长量
-	if err := mysql.DB.Table("users").
-		Select("YEARWEEK(created_at, 1) as date, COUNT(*) as count").
-		Where("created_at >= ?", sevenWeeksAgo).
-		Group("YEARWEEK(created_at, 1)").
-		Order("date DESC").
-		Find(&actualWeekly).Error; err != nil {
+	// 修改周数据查询
+	var weeklyResults []GrowthData
+	err = mysql.DB.Raw(`
+        SELECT 
+            CONCAT(
+                YEAR(MIN(created_at)),
+                '-W',
+                LPAD(WEEK(MIN(created_at), 1), 2, '0')
+            ) as date,
+            COUNT(*) as count
+        FROM users
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 WEEK)
+        GROUP BY YEAR(created_at), WEEK(created_at, 1)
+        ORDER BY YEAR(created_at) DESC, WEEK(created_at, 1) DESC
+    `).Find(&weeklyResults).Error
+
+	if err != nil {
+		zap.L().Error("failed to query weekly growth", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	// 将周数格式转换为更易读的格式
-	for i := range actualWeekly {
-		yearWeek := actualWeekly[i].Date
-		year := yearWeek[:4]
-		week := yearWeek[4:]
-		actualWeekly[i].Date = fmt.Sprintf("%s-W%s", year, week)
-	}
+	// 修改月数据查询
+	var monthlyResults []GrowthData
+	err = mysql.DB.Raw(`
+        SELECT 
+            DATE_FORMAT(MIN(created_at), '%Y-%m') as date,
+            COUNT(*) as count
+        FROM users
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY YEAR(created_at), MONTH(created_at)
+        ORDER BY YEAR(created_at) DESC, MONTH(created_at) DESC
+    `).Find(&monthlyResults).Error
 
-	// 查询每月的用户增长量
-	if err := mysql.DB.Table("users").
-		Select("DATE_FORMAT(created_at, '%Y-%m') as date, COUNT(*) as count").
-		Where("created_at >= ?", sixMonthsAgo).
-		Group("DATE_FORMAT(created_at, '%Y-%m')").
-		Order("date DESC").
-		Find(&actualMonthly).Error; err != nil {
+	if err != nil {
+		zap.L().Error("failed to query monthly growth", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	// 更新实际数据
-	for _, actual := range actualDaily {
-		for i, growth := range dailyGrowth {
-			if growth.Date == actual.Date {
-				dailyGrowth[i].Count = actual.Count
+	// 更新日增长数据
+	for _, result := range dailyResults {
+		resultDate := result.Date[:10]
+		for i := range dailyGrowth {
+			if dailyGrowth[i].Date == resultDate {
+				dailyGrowth[i].Count = result.Count
 			}
 		}
 	}
 
-	for _, actual := range actualWeekly {
-		for i, growth := range weeklyGrowth {
-			if growth.Date == actual.Date {
-				weeklyGrowth[i].Count = actual.Count
+	// 更新周增长数据
+	for _, result := range weeklyResults {
+		for i := range weeklyGrowth {
+			if weeklyGrowth[i].Date == result.Date {
+				weeklyGrowth[i].Count = result.Count
 			}
 		}
 	}
 
-	for _, actual := range actualMonthly {
-		for i, growth := range monthlyGrowth {
-			if growth.Date == actual.Date {
-				monthlyGrowth[i].Count = actual.Count
+	// 更新月增长数据
+	for _, result := range monthlyResults {
+		for i := range monthlyGrowth {
+			if monthlyGrowth[i].Date == result.Date {
+				monthlyGrowth[i].Count = result.Count
 			}
 		}
 	}
 
-	// 返回结果
 	ResponseSuccess(c, gin.H{
 		"daily_growth":   dailyGrowth,
 		"weekly_growth":  weeklyGrowth,
@@ -159,14 +170,8 @@ func GetActivePosts(context *gin.Context) {
 
 // GetPostsGrowth 帖子增长量
 func GetPostsGrowth(c *gin.Context) {
+	// 获取最近7天的完整日期列表
 	now := time.Now()
-
-	// 准备时间范围
-	sevenDaysAgo := now.AddDate(0, 0, -6) // 包含今天
-	sevenWeeksAgo := now.AddDate(0, 0, -7*7)
-	sixMonthsAgo := now.AddDate(0, -6, 0)
-
-	// 准备结果数组
 	dailyGrowth := make([]GrowthData, 7)
 	weeklyGrowth := make([]GrowthData, 7)
 	monthlyGrowth := make([]GrowthData, 6)
@@ -182,7 +187,8 @@ func GetPostsGrowth(c *gin.Context) {
 
 		// 填充每周数据
 		if i < 7 {
-			weekYear, weekNum := now.AddDate(0, 0, -i*7).ISOWeek()
+			weekDate := now.AddDate(0, 0, -i*7)
+			weekYear, weekNum := weekDate.ISOWeek()
 			weeklyGrowth[i] = GrowthData{
 				Date:  fmt.Sprintf("%d-W%02d", weekYear, weekNum),
 				Count: 0,
@@ -199,76 +205,95 @@ func GetPostsGrowth(c *gin.Context) {
 		}
 	}
 
-	// 查询实际数据并更新
-	var actualDaily, actualWeekly, actualMonthly []GrowthData
+	// 查询每日数据
+	var dailyResults []GrowthData
+	err := mysql.DB.Raw(`
+        SELECT 
+            DATE(created_at) as date,
+            COUNT(*) as count
+        FROM posts
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        AND status = 1
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+    `).Find(&dailyResults).Error
 
-	// 查询每天的帖子增长量
-	if err := mysql.DB.Table("posts").
-		Select("DATE(created_at) as date, COUNT(*) as count").
-		Where("DATE(created_at) >= DATE(?) AND status = 1", sevenDaysAgo).
-		Group("DATE(created_at)").
-		Order("date DESC").
-		Find(&actualDaily).Error; err != nil {
+	if err != nil {
+		zap.L().Error("failed to query daily growth", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	// 查询每周的帖子增长量
-	if err := mysql.DB.Table("posts").
-		Select("YEARWEEK(created_at, 1) as date, COUNT(*) as count").
-		Where("created_at >= ? AND status = 1", sevenWeeksAgo).
-		Group("YEARWEEK(created_at, 1)").
-		Order("date DESC").
-		Find(&actualWeekly).Error; err != nil {
+	// 查询每周数据
+	var weeklyResults []GrowthData
+	err = mysql.DB.Raw(`
+        SELECT 
+            CONCAT(
+                YEAR(MIN(created_at)),
+                '-W',
+                LPAD(WEEK(MIN(created_at), 1), 2, '0')
+            ) as date,
+            COUNT(*) as count
+        FROM posts
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 WEEK)
+        AND status = 1
+        GROUP BY YEAR(created_at), WEEK(created_at, 1)
+        ORDER BY YEAR(created_at) DESC, WEEK(created_at, 1) DESC
+    `).Find(&weeklyResults).Error
+
+	if err != nil {
+		zap.L().Error("failed to query weekly growth", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	// 将周数格式转换为更易读的格式
-	for i := range actualWeekly {
-		yearWeek := actualWeekly[i].Date
-		year := yearWeek[:4]
-		week := yearWeek[4:]
-		actualWeekly[i].Date = fmt.Sprintf("%s-W%s", year, week)
-	}
+	// 查询每月数据
+	var monthlyResults []GrowthData
+	err = mysql.DB.Raw(`
+        SELECT 
+            DATE_FORMAT(MIN(created_at), '%Y-%m') as date,
+            COUNT(*) as count
+        FROM posts
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        AND status = 1
+        GROUP BY YEAR(created_at), MONTH(created_at)
+        ORDER BY YEAR(created_at) DESC, MONTH(created_at) DESC
+    `).Find(&monthlyResults).Error
 
-	// 查询每月的帖子增长量
-	if err := mysql.DB.Table("posts").
-		Select("DATE_FORMAT(created_at, '%Y-%m') as date, COUNT(*) as count").
-		Where("created_at >= ? AND status = 1", sixMonthsAgo).
-		Group("DATE_FORMAT(created_at, '%Y-%m')").
-		Order("date DESC").
-		Find(&actualMonthly).Error; err != nil {
+	if err != nil {
+		zap.L().Error("failed to query monthly growth", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	// 更新实际数据
-	for _, actual := range actualDaily {
-		for i, growth := range dailyGrowth {
-			if growth.Date == actual.Date {
-				dailyGrowth[i].Count = actual.Count
+	// 更新日增长数据
+	for _, result := range dailyResults {
+		resultDate := result.Date[:10]
+		for i := range dailyGrowth {
+			if dailyGrowth[i].Date == resultDate {
+				dailyGrowth[i].Count = result.Count
 			}
 		}
 	}
 
-	for _, actual := range actualWeekly {
-		for i, growth := range weeklyGrowth {
-			if growth.Date == actual.Date {
-				weeklyGrowth[i].Count = actual.Count
+	// 更新周增长数据
+	for _, result := range weeklyResults {
+		for i := range weeklyGrowth {
+			if weeklyGrowth[i].Date == result.Date {
+				weeklyGrowth[i].Count = result.Count
 			}
 		}
 	}
 
-	for _, actual := range actualMonthly {
-		for i, growth := range monthlyGrowth {
-			if growth.Date == actual.Date {
-				monthlyGrowth[i].Count = actual.Count
+	// 更新月增长数据
+	for _, result := range monthlyResults {
+		for i := range monthlyGrowth {
+			if monthlyGrowth[i].Date == result.Date {
+				monthlyGrowth[i].Count = result.Count
 			}
 		}
 	}
 
-	// 返回结果
 	ResponseSuccess(c, gin.H{
 		"daily_growth":   dailyGrowth,
 		"weekly_growth":  weeklyGrowth,

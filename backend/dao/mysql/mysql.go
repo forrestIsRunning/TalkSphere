@@ -3,14 +3,13 @@ package mysql
 import (
 	"TalkSphere/setting"
 	"fmt"
+	"time"
+
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var DB *gorm.DB
@@ -33,8 +32,8 @@ func NewMyWriter() *MyWriter {
 func Init(cfg *setting.MysqlConfig) (err error) {
 	// 参考 https://github.com/go-sql-driver/mysql#dsn-data-source-name 获取详情
 	//"user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
-	dsn := strings.Join([]string{cfg.User, ":", cfg.PassWord, "@tcp(", cfg.Host, ":", strconv.Itoa(cfg.Port), ")/", cfg.DB,
-		"?charset=utf8&parseTime=true&loc=Local"}, "")
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.User, cfg.PassWord, cfg.Host, cfg.Port, cfg.DB)
 	fmt.Println("dns:", dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.New(
