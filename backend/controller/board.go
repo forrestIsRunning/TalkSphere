@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"TalkSphere/dao/mysql"
+	"TalkSphere/pkg/mysql"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"

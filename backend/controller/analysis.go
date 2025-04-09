@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"TalkSphere/dao/mysql"
+	"TalkSphere/pkg/mysql"
 	"TalkSphere/pkg/oss"
 	"TalkSphere/setting"
 	"bytes"

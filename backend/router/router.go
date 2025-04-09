@@ -14,7 +14,6 @@ import (
 )
 
 func Setup() *gin.Engine {
-	// 设置 gin 框架日志输出模式
 	gin.SetMode(setting.Conf.GinConfig.Mode)
 
 	r := gin.Default()
