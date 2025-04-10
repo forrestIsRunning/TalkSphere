@@ -93,22 +93,30 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	// 如果注册的是 admin 用户，自动设置为管理员
-	if params.Username == "admin" {
-		enforcer, exists := c.Get("enforcer")
-		if !exists {
-			enforcer = rbac.Enforcer
-		}
+	// 获取 enforcer
+	enforcer, exists := c.Get("enforcer")
+	if !exists {
+		enforcer = rbac.Enforcer
+	}
+	e := enforcer.(*casbin.Enforcer)
 
-		e := enforcer.(*casbin.Enforcer)
-		_, err := e.AddRoleForUser(fmt.Sprintf("%d", user.ID), "admin")
-		if err != nil {
-			zap.L().Error("设置管理员角色失败", zap.Error(err))
-		} else {
-			// 保存策略到数据库
-			if err := e.SavePolicy(); err != nil {
-				zap.L().Error("保存策略失败", zap.Error(err))
-			}
+	// 设置用户角色
+	var role string
+	if params.Username == "admin" {
+		role = "admin"
+	} else {
+		role = "user" // 默认角色为普通用户
+	}
+
+	// 为用户添加角色
+	_, err := e.AddRoleForUser(fmt.Sprintf("%d", user.ID), role)
+	if err != nil {
+		zap.L().Error("设置用户角色失败", zap.Error(err))
+		// 不要因为设置角色失败就中断注册流程
+	} else {
+		// 保存策略到数据库
+		if err := e.SavePolicy(); err != nil {
+			zap.L().Error("保存策略失败", zap.Error(err))
 		}
 	}
 
@@ -340,5 +348,31 @@ func GetUserLists(c *gin.Context) {
 	ResponseSuccess(c, gin.H{
 		"total": total,
 		"users": userList,
+	})
+}
+
+// GetUserRole 获取当前用户的角色
+func GetUserRole(c *gin.Context) {
+	// 从上下文获取用户ID
+	userID, exists := c.Get(CtxtUserID)
+	if !exists {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+
+	// 转换为字符串（因为 casbin 中存储的是字符串）
+	userIDStr := fmt.Sprintf("%v", userID)
+
+	// 获取用户角色
+	role, err := rbac.GetUserRole(userIDStr)
+	if err != nil {
+		zap.L().Error("get user role failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	ResponseSuccess(c, gin.H{
+		"user_id": userID,
+		"role":    role,
 	})
 }

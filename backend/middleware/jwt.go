@@ -3,6 +3,8 @@ package middleware
 import (
 	"TalkSphere/controller"
 	"TalkSphere/pkg/jwt"
+	"TalkSphere/pkg/rbac"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -35,6 +37,16 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		}
 		c.Set(controller.CtxtUserID, mc.UserID)
 		c.Set(controller.CtxUserName, mc.Username)
+
+		// 获取并设置用户角色
+		role, err := rbac.GetUserRole(strconv.Itoa(int(mc.UserID)))
+		if err != nil {
+			controller.ResponseError(c, controller.CodeServerBusy)
+			c.Abort()
+			return
+		}
+		c.Set(ROLE, role)
+
 		c.Next()
 	}
 }

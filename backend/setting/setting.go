@@ -20,6 +20,7 @@ type Config struct {
 	*AuthConfig      `mapstructure:"auth"`
 	*OSSConfig       `mapstructure:"oss"`
 	*DefaultAvatar   `mapstructure:"default_avatar"`
+	*SuperAdmin      `mapstructure:"super_admin"`
 }
 
 type AppConfig struct {
@@ -81,6 +82,11 @@ type OSSConfig struct {
 
 type DefaultAvatar struct {
 	AvatarURL string `mapstructure:"avatar_url"`
+}
+
+type SuperAdmin struct {
+	Password string `mapstructure:"password"`
+	Email    string `mapstructure:"email"`
 }
 
 func Init() (err error) {

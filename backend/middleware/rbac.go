@@ -1,61 +1,36 @@
 package middleware
 
 import (
-	"TalkSphere/controller"
 	"TalkSphere/pkg/rbac"
-	"fmt"
+	"net/http"
 
-	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 )
 
-// 区分admin和super Admin
+const ROLE = "role"
 
-//super admin
-//admin
-//user
-//guest
-
-// CheckAdmin 检查是否为管理员
-func CheckAdmin(c *gin.Context) bool {
-	userID, exists := c.Get(controller.CtxtUserID)
-	if !exists {
-		return false
-	}
-
-	// 从上下文获取 enforcer
-	enforcer, exists := c.Get("enforcer")
-	if !exists {
-		return false
-	}
-
-	e, ok := enforcer.(*casbin.Enforcer)
-	if !ok {
-		return false
-	}
-
-	// 检查用户是否是管理员
-	isAdmin, err := e.HasRoleForUser(fmt.Sprintf("%d", userID.(int64)), "admin")
-	if err != nil {
-		return false
-	}
-
-	return isAdmin
-}
-
-// AdminRequired 管理员权限要求中间件
-func AdminRequired() gin.HandlerFunc {
+// RBACMiddleware 统一的权限检查中间件
+func RBACMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("enforcer", rbac.Enforcer)
-
-		if !CheckAdmin(c) {
-			c.AbortWithStatusJSON(403, gin.H{
-				"code":    1005,
-				"message": "需要管理员权限",
-			})
-			return
+		// 从上下文中获取用户角色
+		role := c.GetString(ROLE)
+		if role == "" {
+			role = "guest"
 		}
-		fmt.Println("--AdminRequired---")
-		c.Next()
+
+		// 获取请求的路径和方法
+		obj := c.Request.URL.Path
+		act := c.Request.Method
+
+		// 使用 Casbin 检查权限
+		if rbac.CheckPermission(role, obj, act) {
+			c.Next()
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code": 403,
+				"msg":  "Permission denied",
+			})
+			c.Abort()
+		}
 	}
 }

@@ -48,3 +48,7 @@ oss:
 
 default_avatar:
   avatar_url: "https://talkspere-1321722407.cos.ap-beijing.myqcloud.com/defaultAvatar.jpg"
+
+super_admin:
+  password: "super_admin"
+  email: "super_admin@talksphere.com" 
