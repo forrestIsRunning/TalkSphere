@@ -1,7 +1,13 @@
 package rbac
 
 import (
+	"TalkSphere/models"
+	"TalkSphere/pkg/encrypt"
 	"TalkSphere/pkg/mysql"
+	"TalkSphere/pkg/snowflake"
+	"TalkSphere/setting"
+
+	"fmt"
 
 	"github.com/casbin/casbin/v2"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
@@ -85,4 +91,36 @@ func GetUserRole(userID string) (string, error) {
 	}
 
 	return rule.V1, nil
+}
+
+// InitSuperAdmin 初始化超级管理员
+func InitSuperAdmin() {
+	// 检查是否已存在超级管理员
+	var user models.User
+	result := mysql.DB.Where("username = ?", "super_admin").First(&user)
+	if result.RowsAffected > 0 {
+		// 已存在则跳过
+		return
+	}
+
+	// 创建超级管理员用户
+	userID := snowflake.GenID()
+	user = models.User{
+		ID:           userID,
+		Username:     "super_admin",
+		Email:        setting.Conf.SuperAdmin.Email,
+		PasswordHash: encrypt.EncryptPassword(setting.Conf.SuperAdmin.Password), // 使用环境变量或配置文件中的密码
+		Bio:          "System Super Administrator",
+		Status:       1,
+	}
+
+	if err := mysql.DB.Create(&user).Error; err != nil {
+		zap.L().Fatal("failed to create super admin", zap.Error(err))
+		return
+	}
+
+	// 设置超级管理员角色
+	if ok := AddRole(fmt.Sprintf("%d", userID), "super_admin"); !ok {
+		zap.L().Fatal("failed to set super admin role")
+	}
 }

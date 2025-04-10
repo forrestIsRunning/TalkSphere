@@ -157,3 +157,25 @@ CREATE INDEX idx_likes_user ON likes(user_id);
 CREATE INDEX idx_likes_target ON likes(target_id, target_type);
 CREATE INDEX idx_favorites_user ON favorites(user_id);
 CREATE INDEX idx_favorites_post ON favorites(post_id);
+
+--- 如果需要删除，可以看看下面的语句
+```bash
+-- 先禁用外键约束检查
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 清空所有表数据
+TRUNCATE TABLE user_activities;
+TRUNCATE TABLE favorites;
+TRUNCATE TABLE likes;
+TRUNCATE TABLE comments;
+TRUNCATE TABLE post_tags;
+TRUNCATE TABLE tags;
+TRUNCATE TABLE post_images;
+TRUNCATE TABLE posts;
+TRUNCATE TABLE boards;
+TRUNCATE TABLE casbin_rule;
+TRUNCATE TABLE users;
+
+-- 重新启用外键约束检查
+SET FOREIGN_KEY_CHECKS = 1;
+```

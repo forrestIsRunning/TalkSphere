@@ -81,6 +81,9 @@ func main() {
 
 	rbac.InitCasbin()
 
+	// 初始化超级管理员
+	rbac.InitSuperAdmin()
+
 	// 5. 注册路由
 	r := router.Setup()
 	// 6. 启动服务（优雅关机）
