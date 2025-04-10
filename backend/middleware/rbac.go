@@ -9,6 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 区分admin和super Admin
+
+//super admin
+//admin
+//user
+//guest
+
 // CheckAdmin 检查是否为管理员
 func CheckAdmin(c *gin.Context) bool {
 	userID, exists := c.Get(controller.CtxtUserID)

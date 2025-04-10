@@ -1,9 +1,9 @@
 package main
 
 import (
-	"TalkSphere/dao/mysql"
 	_ "TalkSphere/docs" // swagger docs
 	"TalkSphere/pkg/logger"
+	"TalkSphere/pkg/mysql"
 	"TalkSphere/pkg/oss"
 	"TalkSphere/pkg/rbac"
 	"TalkSphere/pkg/snowflake"

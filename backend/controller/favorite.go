@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"TalkSphere/dao/mysql"
 	"TalkSphere/models"
+	"TalkSphere/pkg/mysql"
 	"net/http"
 	"strconv"
 

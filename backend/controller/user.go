@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"TalkSphere/dao/mysql"
 	"TalkSphere/models"
 	"TalkSphere/pkg/encrypt"
 	"TalkSphere/pkg/jwt"
+	"TalkSphere/pkg/mysql"
 	"TalkSphere/pkg/rbac"
 	"TalkSphere/pkg/snowflake"
 	"TalkSphere/pkg/upload"

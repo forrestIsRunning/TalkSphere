@@ -56,10 +56,10 @@ CREATE TABLE `boards` (
 ## 服务启动
 
 ### 1. 词云图服务
-详细说明见 [backend/scripts/README.md](../backend/scripts/README.md)
+详细说明见 [backend/scripts/README.md](../backend/scripts/worldCloud/README.md)
 
 ### 2. genData
-详细说明见 [backend/genData/README.md](../backend/genData/README.md)
+详细说明见 [backend/genData/README.md](../backend/scripts/genData/README.md)
 
 ### 3. Golang 后端
 详细说明见 [backend/README.md](../backend/README.md)
