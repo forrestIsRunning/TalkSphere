@@ -1,10 +1,10 @@
 package upload
 
 import (
-	"TalkSphere/pkg/oss"
-	"TalkSphere/setting"
 	"context"
 	"fmt"
+	"github.com/TalkSphere/backend/pkg/oss"
+	"github.com/TalkSphere/backend/setting"
 	"io"
 	"mime/multipart"
 	"os"

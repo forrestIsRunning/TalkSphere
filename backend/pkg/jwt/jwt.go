@@ -1,8 +1,8 @@
 package jwt
 
 import (
-	"TalkSphere/setting"
 	"errors"
+	"github.com/TalkSphere/backend/setting"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )

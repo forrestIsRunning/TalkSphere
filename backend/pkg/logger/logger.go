@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"TalkSphere/setting"
+	"github.com/TalkSphere/backend/setting"
 	"github.com/gin-gonic/gin"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"

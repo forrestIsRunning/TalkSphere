@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/mysql"
-	"TalkSphere/pkg/upload"
 	"errors"
 	"fmt"
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/upload"
 	"net/http"
 	"strconv"
 	"time"

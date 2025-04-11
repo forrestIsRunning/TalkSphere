@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"TalkSphere/controller"
-	"TalkSphere/pkg/jwt"
-	"TalkSphere/pkg/rbac"
+	"github.com/TalkSphere/backend/controller"
+	"github.com/TalkSphere/backend/pkg/jwt"
+	"github.com/TalkSphere/backend/pkg/rbac"
 	"strconv"
 	"strings"
 

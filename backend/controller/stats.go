@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/mysql"
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/mysql"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

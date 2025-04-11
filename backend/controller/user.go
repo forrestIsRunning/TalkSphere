@@ -1,15 +1,15 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/encrypt"
-	"TalkSphere/pkg/jwt"
-	"TalkSphere/pkg/mysql"
-	"TalkSphere/pkg/rbac"
-	"TalkSphere/pkg/snowflake"
-	"TalkSphere/pkg/upload"
-	"TalkSphere/setting"
 	"fmt"
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/encrypt"
+	"github.com/TalkSphere/backend/pkg/jwt"
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/rbac"
+	"github.com/TalkSphere/backend/pkg/snowflake"
+	"github.com/TalkSphere/backend/pkg/upload"
+	"github.com/TalkSphere/backend/setting"
 	"strconv"
 
 	"github.com/casbin/casbin/v2"

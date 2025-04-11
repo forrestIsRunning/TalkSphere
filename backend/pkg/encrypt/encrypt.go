@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 
-	"TalkSphere/setting"
+	"github.com/TalkSphere/backend/setting"
 )
 
 func EncryptPassword(opassword string) string {

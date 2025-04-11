@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/mysql"
 	"fmt"
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/mysql"
 	"net/http"
 	"strconv"
 

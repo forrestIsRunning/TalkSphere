@@ -1,8 +1,8 @@
 package oss
 
 import (
-	"TalkSphere/setting"
 	"fmt"
+	"github.com/TalkSphere/backend/setting"
 	"net/http"
 	"net/url"
 
