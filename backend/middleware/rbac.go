@@ -20,6 +20,9 @@ func RBACMiddleware() gin.HandlerFunc {
 
 		// 获取请求的路径和方法
 		obj := c.Request.URL.Path
+		if obj == "" {
+			obj = "/"
+		}
 		act := c.Request.Method
 
 		// 使用 Casbin 检查权限
@@ -28,7 +31,12 @@ func RBACMiddleware() gin.HandlerFunc {
 		} else {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code": 403,
-				"msg":  "Permission denied",
+				"msg":  "没有访问权限",
+				"data": gin.H{
+					"path":   obj,
+					"method": act,
+					"role":   role,
+				},
 			})
 			c.Abort()
 		}

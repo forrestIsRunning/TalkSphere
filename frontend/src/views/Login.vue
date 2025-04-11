@@ -109,7 +109,7 @@ export default {
           store.commit('SET_USERINFO', { userID, username })
           
           // 检查是否是管理员账号
-          const isAdminUser = await isAdmin(userID)
+          const isAdminUser = await isAdmin()
           console.log('是否是管理员:', isAdminUser)
           
           if (isAdminUser) {
