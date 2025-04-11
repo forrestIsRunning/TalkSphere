@@ -1,16 +1,15 @@
 package main
 
 import (
-	_ "TalkSphere/docs" // swagger docs
-	"TalkSphere/pkg/logger"
-	"TalkSphere/pkg/mysql"
-	"TalkSphere/pkg/oss"
-	"TalkSphere/pkg/rbac"
-	"TalkSphere/pkg/snowflake"
-	"TalkSphere/router"
-	"TalkSphere/setting"
 	"context"
 	"fmt"
+	"github.com/TalkSphere/backend/pkg/logger"
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/oss"
+	"github.com/TalkSphere/backend/pkg/rbac"
+	"github.com/TalkSphere/backend/pkg/snowflake"
+	"github.com/TalkSphere/backend/router"
+	"github.com/TalkSphere/backend/setting"
 	"log"
 	"net/http"
 	"os"

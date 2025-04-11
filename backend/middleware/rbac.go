@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"TalkSphere/pkg/rbac"
+	"github.com/TalkSphere/backend/pkg/rbac"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +16,12 @@ func RBACMiddleware() gin.HandlerFunc {
 		role := c.GetString(ROLE)
 		if role == "" {
 			role = "guest"
+		}
+
+		// 超级管理员直接放行
+		if role == "super_admin" {
+			c.Next()
+			return
 		}
 
 		// 获取请求的路径和方法
