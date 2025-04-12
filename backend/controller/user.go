@@ -105,21 +105,27 @@ func RegisterHandler(c *gin.Context) {
 
 	// 设置用户角色
 	var role string
-	if params.Username == "admin" {
-		role = "admin"
-	} else {
-		role = "user" // 默认角色为普通用户
-	}
+	role = "user" // 默认角色为普通用户
 
 	// 为用户添加角色
-	_, err := e.AddRoleForUser(strconv.FormatInt(user.ID, 10), role)
+	userIDStr := strconv.FormatInt(user.ID, 10)
+	_, err := e.AddRoleForUser(userIDStr, role)
 	if err != nil {
-		zap.L().Error("设置用户角色失败", zap.Error(err))
+		zap.L().Error("设置用户角色失败",
+			zap.String("user_id", userIDStr),
+			zap.String("role", role),
+			zap.Error(err))
 		// 不要因为设置角色失败就中断注册流程
 	} else {
 		// 保存策略到数据库
 		if err := e.SavePolicy(); err != nil {
-			zap.L().Error("保存策略失败", zap.Error(err))
+			zap.L().Error("保存策略失败",
+				zap.String("user_id", userIDStr),
+				zap.Error(err))
+		} else {
+			zap.L().Info("用户角色设置成功",
+				zap.String("user_id", userIDStr),
+				zap.String("role", role))
 		}
 	}
 
@@ -254,11 +260,19 @@ func GetUserProfile(c *gin.Context) {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
-	userID = userID.(int64)
+
+	// 将 userID 转换为 int64
+	userIDStr := userID.(string)
+	userIDInt, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		zap.L().Error("userID 转换失败", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
 
 	// 查询用户信息
 	var user models.User
-	result := mysql.DB.Where("id = ?", userID).First(&user)
+	result := mysql.DB.Where("id = ?", userIDInt).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
