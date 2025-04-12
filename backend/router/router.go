@@ -1,18 +1,17 @@
 package router
 
 import (
-	"TalkSphere/controller"
-	"TalkSphere/pkg/logger"
-	"TalkSphere/setting"
 	"time"
-
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
-	"TalkSphere/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	"github.com/TalkSphere/backend/controller"
+	"github.com/TalkSphere/backend/middleware"
+	"github.com/TalkSphere/backend/pkg/logger"
+	"github.com/TalkSphere/backend/setting"
 )
 
 func Setup() *gin.Engine {
@@ -75,8 +74,6 @@ func RegisterAuthRoutes(r *gin.RouterGroup) {
 	r.POST("/bio", controller.UpdateUserBio)
 	r.POST("/avatar", controller.UpdateUserAvatar)
 	r.GET("/users", controller.GetUserLists)
-	//debug用
-	r.GET("/user/role", controller.GetUserRole)
 
 	// 板块管理
 	r.POST("/boards", controller.CreateBoard)
@@ -109,4 +106,16 @@ func RegisterAuthRoutes(r *gin.RouterGroup) {
 
 	// 统计相关
 	r.GET("/admin/stats", controller.GetSystemStats)
+
+	// 权限管理相关
+	//获取用户的所有权限
+	r.GET("/permission/user/:user_id", controller.GetUserPermissions)
+	//修改用户权限
+	r.POST("/permission/user/:user_id", controller.UpdateUserPermissions)
+	//校验用户权限
+	r.GET("/permission/check/:user_id", controller.CheckPermission)
+	//获取角色所拥有的权限
+	r.GET("/permission/role", controller.GetRolePermissions)
+	//获取用户的角色
+	r.GET("/permission/user/role/:user_id", controller.GetUserRole)
 }

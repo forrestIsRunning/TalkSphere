@@ -6,6 +6,14 @@ p, admin, /api/analysis/*, GET
 p, admin, /api/admin/stats, GET
 p, admin, /api/boards/*, *
 p, admin, /api/users, GET
+p, admin, /api/posts/*, *
+p, admin, /api/comments/*, *
+p, admin, /api/user/role, GET
+p, admin, /api/permission/*, *
+p, admin, /api/profile, GET
+p, admin, /api/posts/user/*, *
+p, admin, /api/likes/*, *
+p, admin, /api/favorites/*, *
 
 # 普通用户权限
 p, user, /api/profile, GET
@@ -14,14 +22,15 @@ p, user, /api/avatar, POST
 p, user, /api/posts/*, GET
 p, user, /api/posts, POST
 p, user, /api/posts/image, POST
+p, user, /api/posts/user, GET
+p, user, /api/posts/user/likes, GET
+p, user, /api/posts/user/favorites, GET
 p, user, /api/comments/*, *
 p, user, /api/likes/*, *
+p, user, /api/likes/status, GET
 p, user, /api/favorites/*, *
-
-# 在用户权限部分添加
+p, user, /api/favorites, GET
 p, user, /api/user/role, GET
-p, admin, /api/user/role, GET
-p, super_admin, /api/user/role, GET
 
 # 游客权限
 p, guest, /api/boards, GET

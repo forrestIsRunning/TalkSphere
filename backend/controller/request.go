@@ -2,8 +2,9 @@ package controller
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 const CtxtUserID = "userID"
@@ -12,13 +13,13 @@ const CtxUserName = "userName"
 var ErrorUserNotLogin = errors.New("用户未登录")
 
 // getCurrentUserID 获取当前登录的用户 ID
-func getCurrentUserID(c *gin.Context) (userID int64, err error) {
+func getCurrentUserID(c *gin.Context) (userID string, err error) {
 	uid, ok := c.Get(CtxtUserID)
 	if !ok {
 		err = ErrorUserNotLogin
 		return
 	}
-	userID, ok = uid.(int64)
+	userID, ok = uid.(string)
 	if !ok {
 		err = ErrorUserNotLogin
 		return

@@ -2,9 +2,11 @@ package jwt
 
 import (
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/TalkSphere/backend/setting"
 	"github.com/dgrijalva/jwt-go"
-	"time"
 )
 
 //const TokenExpireDuration = time.Hour * 2
@@ -16,7 +18,7 @@ var mySecret = []byte("&asd99dBNBAsdq")
 // 我们这里需要额外记录一个 UserID 字段，所以要自定义结构体
 // 如果想要保存更多信息，都可以添加到这个结构体中
 type MyClaims struct {
-	UserID   int64  `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	jwt.StandardClaims
 }
@@ -25,7 +27,7 @@ type MyClaims struct {
 func GenToken(userID int64, username string) (string, error) {
 	// 创建一个我们自己的声明的数据
 	c := MyClaims{
-		UserID:   userID,
+		UserID:   strconv.FormatInt(userID, 10),
 		Username: username, // 自定义字段
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Duration(setting.Conf.JwtExpire) * time.Second).Unix(), // 过期时间

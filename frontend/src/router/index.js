@@ -78,6 +78,12 @@ const routes = [
         meta: { requiresAuth: true, requiresAdmin: true }
       },
       {
+        path: 'permissions',
+        name: 'Permissions',
+        component: () => import('../views/admin/Permissions.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
         path: 'boards',
         name: 'BoardManagement',
         component: () => import('../views/BoardManagement.vue'),

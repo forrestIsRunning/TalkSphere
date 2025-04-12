@@ -105,8 +105,8 @@ export default {
           const { token, userID, username } = res.data.data
           
           // 存储用户信息
-          store.commit('SET_TOKEN', token)
-          store.commit('SET_USERINFO', { userID, username })
+          store.commit('SET_TOKEN', token.replace('Bearer ', ''))
+          store.commit('SET_USERINFO', { userID: String(userID), username })
           
           // 检查是否是管理员账号
           const isAdminUser = await isAdmin()
@@ -121,7 +121,7 @@ export default {
           // 如果是管理员登录页面但不是管理员账号
           if (props.isAdminLogin) {
             ElMessage.error('非管理员账号，请使用管理员账号登录')
-            store.commit('CLEAR_USER_INFO')
+            store.commit('CLEAR_USER')
             return
           }
           
