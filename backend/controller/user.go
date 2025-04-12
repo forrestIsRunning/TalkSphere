@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/TalkSphere/backend/models"
@@ -167,10 +166,18 @@ func LoginHandler(c *gin.Context) {
 		zap.L().Error("更新最后登录时间失败", zap.Error(err))
 	}
 
+	// 6. 获取用户角色
+	role, err := rbac.GetUserRole(strconv.FormatInt(user.ID, 10))
+	if err != nil {
+		zap.L().Error("获取用户角色失败", zap.Error(err))
+		role = "user" // 默认角色
+	}
+
 	ResponseSuccess(c, gin.H{
 		"token":    "Bearer " + token,
 		"userID":   strconv.FormatInt(user.ID, 10),
 		"username": user.Username,
+		"role":     role,
 	})
 }
 
@@ -338,7 +345,7 @@ func GetUserLists(c *gin.Context) {
 	userList := make([]gin.H, 0, len(users))
 	for _, user := range users {
 		// 获取用户角色
-		role, err := rbac.GetUserRole(fmt.Sprintf("%d", user.ID))
+		role, err := rbac.GetUserRole(strconv.FormatInt(user.ID, 10))
 		if err != nil {
 			zap.L().Error("get user role failed",
 				zap.Int64("user_id", user.ID),
@@ -347,7 +354,7 @@ func GetUserLists(c *gin.Context) {
 		}
 
 		userList = append(userList, gin.H{
-			"id":         user.ID,
+			"id":         strconv.FormatInt(user.ID, 10),
 			"username":   user.Username,
 			"email":      user.Email,
 			"avatar":     user.AvatarURL,
