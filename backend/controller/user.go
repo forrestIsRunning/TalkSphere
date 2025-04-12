@@ -167,15 +167,27 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 6. 获取用户角色
-	role, err := rbac.GetUserRole(strconv.FormatInt(user.ID, 10))
+	userIDStr := strconv.FormatInt(user.ID, 10)
+	role, err := rbac.GetUserRole(userIDStr)
 	if err != nil {
 		zap.L().Error("获取用户角色失败", zap.Error(err))
 		role = "user" // 默认角色
+
+		// 如果获取角色失败，尝试添加默认角色
+		if ok := rbac.AddRole(userIDStr, role); !ok {
+			zap.L().Error("设置默认用户角色失败",
+				zap.String("user_id", userIDStr),
+				zap.String("role", role))
+		} else {
+			zap.L().Info("成功设置默认用户角色",
+				zap.String("user_id", userIDStr),
+				zap.String("role", role))
+		}
 	}
 
 	ResponseSuccess(c, gin.H{
 		"token":    "Bearer " + token,
-		"userID":   strconv.FormatInt(user.ID, 10),
+		"userID":   userIDStr,
 		"username": user.Username,
 		"role":     role,
 	})
@@ -191,21 +203,15 @@ func UpdateUserBio(c *gin.Context) {
 	}
 
 	// 获取当前用户ID
-	userID, ok := c.Get(CtxtUserID)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
 	// 检查用户是否存在
 	var user models.User
-	result := mysql.DB.Where("id = ?", userIDStr).First(&user)
+	result := mysql.DB.Where("id = ?", userID).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -216,7 +222,7 @@ func UpdateUserBio(c *gin.Context) {
 	}
 
 	// 更新bio
-	result = mysql.DB.Model(&user).Where("id = ?", userIDStr).Update("bio", params.Bio)
+	result = mysql.DB.Model(&user).Where("id = ?", userID).Update("bio", params.Bio)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -235,13 +241,13 @@ func UpdateUserAvatar(c *gin.Context) {
 		return
 	}
 
-	userID, ok := c.Get(CtxtUserID)
-	if !ok {
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	avatarURL, err := upload.SaveImageToOSS(file, "avatar", userID.(int64))
+	avatarURL, err := upload.SaveImageToOSS(file, "avatar", userID)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -249,7 +255,7 @@ func UpdateUserAvatar(c *gin.Context) {
 
 	// 更新用户头像URL
 	var user models.User
-	result := mysql.DB.Model(&user).Where("id = ?", userID.(int64)).Update("avatar_url", avatarURL)
+	result := mysql.DB.Model(&user).Where("id = ?", userID).Update("avatar_url", avatarURL)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -262,24 +268,16 @@ func UpdateUserAvatar(c *gin.Context) {
 
 // GetUserProfile 获取用户详情
 func GetUserProfile(c *gin.Context) {
-	userID, ok := c.Get(CtxtUserID)
-	if !ok {
-		ResponseError(c, CodeNeedLogin)
-		return
-	}
-
-	// 将 userID 转换为 int64
-	userIDStr := userID.(string)
-	userIDInt, err := strconv.ParseInt(userIDStr, 10, 64)
+	// 获取当前用户ID
+	userID, err := getCurrentUserIDInt64(c)
 	if err != nil {
-		zap.L().Error("userID 转换失败", zap.Error(err))
-		ResponseError(c, CodeServerBusy)
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
 	// 查询用户信息
 	var user models.User
-	result := mysql.DB.Where("id = ?", userIDInt).First(&user)
+	result := mysql.DB.Where("id = ?", userID).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return

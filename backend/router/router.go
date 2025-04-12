@@ -118,4 +118,6 @@ func RegisterAuthRoutes(r *gin.RouterGroup) {
 	r.GET("/permission/role", controller.GetRolePermissions)
 	//获取用户的角色
 	r.GET("/permission/user/role/:user_id", controller.GetUserRole)
+	//更新用户角色
+	r.POST("/permission/user/role/:user_id", controller.UpdateUserRole)
 }

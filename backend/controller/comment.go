@@ -2,10 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/TalkSphere/backend/models"
 	"github.com/TalkSphere/backend/pkg/mysql"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -39,18 +39,12 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
 	// 开启事务
 	tx := mysql.DB.Begin()
 
@@ -277,16 +271,9 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 

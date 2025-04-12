@@ -320,10 +320,9 @@ const fetchUsers = async () => {
 const handleRoleChange = async (user, newRole) => {
   try {
     const res = await request({
-      url: '/api/users/role',
-      method: 'put',
+      url: `/api/permission/user/role/${user.user_id}`,
+      method: 'post',
       data: {
-        user_id: user.user_id,
         role: newRole
       }
     })
@@ -349,12 +348,14 @@ const handleRoleChange = async (user, newRole) => {
 const handlePermissionChange = async (user, permission, value) => {
   try {
     const res = await request({
-      url: '/api/user/permissions',
-      method: 'put',
+      url: `/api/permission/user/${user.user_id}`,
+      method: 'post',
       data: {
         user_id: user.user_id,
-        permission,
-        value
+        permissions: [{
+          path: permission,
+          actions: [value ? 'write' : 'read']
+        }]
       }
     })
     

@@ -62,14 +62,22 @@ func AddRole(user string, role string) bool {
 	return ok
 }
 
-// TODO 疑问：移除role后，用户的权限还是user吗？
 // RemoveRole 删除用户角色
 func RemoveRole(user string, role string) bool {
+	zap.L().Info("开始删除用户角色",
+		zap.String("user_id", user),
+		zap.String("role", role))
+
 	ok, err := Enforcer.RemoveGroupingPolicy(user, role)
 	if err != nil {
 		zap.L().Error("remove role error", zap.Error(err))
 		return false
 	}
+
+	zap.L().Info("删除用户角色完成",
+		zap.String("user_id", user),
+		zap.String("role", role),
+		zap.Bool("success", ok))
 	return ok
 }
 
@@ -96,11 +104,41 @@ func GetUserRole(userID string) (string, error) {
 
 // RemoveAllRoles 删除用户的所有角色
 func RemoveAllRoles(userID string) bool {
-	ok, err := Enforcer.RemoveFilteredGroupingPolicy(0, userID)
+	zap.L().Info("开始删除用户所有角色",
+		zap.String("user_id", userID))
+
+	// 先获取用户当前的所有角色
+	roles, err := Enforcer.GetRolesForUser(userID)
 	if err != nil {
-		zap.L().Error("remove all roles error", zap.Error(err))
+		zap.L().Error("获取用户角色失败",
+			zap.String("user_id", userID),
+			zap.Error(err))
 		return false
 	}
+
+	zap.L().Info("当前用户的所有角色",
+		zap.String("user_id", userID),
+		zap.Strings("roles", roles))
+
+	ok, err := Enforcer.RemoveFilteredGroupingPolicy(0, userID)
+	if err != nil {
+		zap.L().Error("删除用户所有角色失败",
+			zap.String("user_id", userID),
+			zap.Error(err))
+		return false
+	}
+
+	// 保存策略到数据库
+	if err := Enforcer.SavePolicy(); err != nil {
+		zap.L().Error("保存策略到数据库失败",
+			zap.String("user_id", userID),
+			zap.Error(err))
+		return false
+	}
+
+	zap.L().Info("删除用户所有角色完成",
+		zap.String("user_id", userID),
+		zap.Bool("success", ok))
 	return ok
 }
 
