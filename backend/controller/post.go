@@ -417,22 +417,28 @@ func GetBoardPosts(c *gin.Context) {
 			"comment_count": post.CommentCount,
 			"created_at":    post.CreatedAt,
 			"updated_at":    post.UpdatedAt,
-			"author": map[string]interface{}{
+		}
+
+		// 处理作者信息
+		if post.Author != nil {
+			postData["author"] = map[string]interface{}{
 				"id":         post.Author.ID,
 				"username":   post.Author.Username,
 				"avatar_url": post.Author.AvatarURL,
-			},
+			}
 		}
 
 		// 处理图片
 		var images []map[string]interface{}
-		for _, img := range post.Images {
-			images = append(images, map[string]interface{}{
-				"id":         img.ID,
-				"url":        img.ImageURL,
-				"post_id":    img.PostID,
-				"created_at": img.CreatedAt,
-			})
+		if len(post.Images) > 0 {
+			for _, img := range post.Images {
+				images = append(images, map[string]interface{}{
+					"id":         img.ID,
+					"url":        img.ImageURL,
+					"post_id":    img.PostID,
+					"created_at": img.CreatedAt,
+				})
+			}
 		}
 		postData["images"] = images
 
