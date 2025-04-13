@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/mysql"
-	"net/http"
 	"strconv"
+
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/mysql"
 
 	"go.uber.org/zap"
 
@@ -37,17 +37,9 @@ func CreateLike(c *gin.Context) {
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		zap.L().Error("类型断言失败")
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
@@ -56,7 +48,7 @@ func CreateLike(c *gin.Context) {
 
 	// 检查是否已点赞
 	var like models.Like
-	err := tx.Where("user_id = ? AND target_id = ? AND target_type = ?",
+	err = tx.Where("user_id = ? AND target_id = ? AND target_type = ?",
 		userID, req.TargetID, req.TargetType).First(&like).Error
 
 	if err == nil {
@@ -142,9 +134,8 @@ func GetLikeStatus(c *gin.Context) {
 	targetID := c.Query("target_id")
 	targetType := c.Query("target_type")
 
-	// 从 JWT 中获取当前用户 ID
-	userID, exists := c.Get("userID")
-	if !exists {
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
@@ -180,7 +171,7 @@ func GetLikeStatus(c *gin.Context) {
 		return exists, nil
 	}
 
-	liked, err := CheckLikeStatus(userID.(int64), targetIDInt, targetTypeInt)
+	liked, err := CheckLikeStatus(userID, targetIDInt, targetTypeInt)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return

@@ -1,15 +1,17 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/encrypt"
-	"TalkSphere/pkg/jwt"
-	"TalkSphere/pkg/mysql"
-	"TalkSphere/pkg/rbac"
-	"TalkSphere/pkg/snowflake"
-	"TalkSphere/pkg/upload"
-	"TalkSphere/setting"
-	"fmt"
+	"time"
+
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/encrypt"
+	"github.com/TalkSphere/backend/pkg/jwt"
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/rbac"
+	"github.com/TalkSphere/backend/pkg/snowflake"
+	"github.com/TalkSphere/backend/pkg/upload"
+	"github.com/TalkSphere/backend/setting"
+
 	"strconv"
 
 	"github.com/casbin/casbin/v2"
@@ -102,21 +104,27 @@ func RegisterHandler(c *gin.Context) {
 
 	// 设置用户角色
 	var role string
-	if params.Username == "admin" {
-		role = "admin"
-	} else {
-		role = "user" // 默认角色为普通用户
-	}
+	role = "user" // 默认角色为普通用户
 
 	// 为用户添加角色
-	_, err := e.AddRoleForUser(fmt.Sprintf("%d", user.ID), role)
+	userIDStr := strconv.FormatInt(user.ID, 10)
+	_, err := e.AddRoleForUser(userIDStr, role)
 	if err != nil {
-		zap.L().Error("设置用户角色失败", zap.Error(err))
+		zap.L().Error("设置用户角色失败",
+			zap.String("user_id", userIDStr),
+			zap.String("role", role),
+			zap.Error(err))
 		// 不要因为设置角色失败就中断注册流程
 	} else {
 		// 保存策略到数据库
 		if err := e.SavePolicy(); err != nil {
-			zap.L().Error("保存策略失败", zap.Error(err))
+			zap.L().Error("保存策略失败",
+				zap.String("user_id", userIDStr),
+				zap.Error(err))
+		} else {
+			zap.L().Info("用户角色设置成功",
+				zap.String("user_id", userIDStr),
+				zap.String("role", role))
 		}
 	}
 
@@ -152,10 +160,36 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
+	// 5. 更新最后登录时间
+	now := time.Now()
+	if err := mysql.DB.Model(&user).Update("last_login_at", &now).Error; err != nil {
+		zap.L().Error("更新最后登录时间失败", zap.Error(err))
+	}
+
+	// 6. 获取用户角色
+	userIDStr := strconv.FormatInt(user.ID, 10)
+	role, err := rbac.GetUserRole(userIDStr)
+	if err != nil {
+		zap.L().Error("获取用户角色失败", zap.Error(err))
+		role = "user" // 默认角色
+
+		// 如果获取角色失败，尝试添加默认角色
+		if ok := rbac.AddRole(userIDStr, role); !ok {
+			zap.L().Error("设置默认用户角色失败",
+				zap.String("user_id", userIDStr),
+				zap.String("role", role))
+		} else {
+			zap.L().Info("成功设置默认用户角色",
+				zap.String("user_id", userIDStr),
+				zap.String("role", role))
+		}
+	}
+
 	ResponseSuccess(c, gin.H{
 		"token":    "Bearer " + token,
-		"userID":   user.ID,
+		"userID":   userIDStr,
 		"username": user.Username,
+		"role":     role,
 	})
 }
 
@@ -169,15 +203,15 @@ func UpdateUserBio(c *gin.Context) {
 	}
 
 	// 获取当前用户ID
-	userID, ok := c.Get(CtxtUserID)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
 	// 检查用户是否存在
 	var user models.User
-	result := mysql.DB.Where("id = ?", userID.(int64)).First(&user)
+	result := mysql.DB.Where("id = ?", userID).First(&user)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -188,7 +222,7 @@ func UpdateUserBio(c *gin.Context) {
 	}
 
 	// 更新bio
-	result = mysql.DB.Model(&user).Where("id = ?", userID.(int64)).Update("bio", params.Bio)
+	result = mysql.DB.Model(&user).Where("id = ?", userID).Update("bio", params.Bio)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -207,13 +241,13 @@ func UpdateUserAvatar(c *gin.Context) {
 		return
 	}
 
-	userID, ok := c.Get(CtxtUserID)
-	if !ok {
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	avatarURL, err := upload.SaveImageToOSS(file, "avatar", userID.(int64))
+	avatarURL, err := upload.SaveImageToOSS(file, "avatar", userID)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -221,7 +255,7 @@ func UpdateUserAvatar(c *gin.Context) {
 
 	// 更新用户头像URL
 	var user models.User
-	result := mysql.DB.Model(&user).Where("id = ?", userID.(int64)).Update("avatar_url", avatarURL)
+	result := mysql.DB.Model(&user).Where("id = ?", userID).Update("avatar_url", avatarURL)
 	if result.Error != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -232,63 +266,55 @@ func UpdateUserAvatar(c *gin.Context) {
 	})
 }
 
-// GetUserProfile 获取用户详情
+// GetUserProfile 获取用户信息
 func GetUserProfile(c *gin.Context) {
-	userID, ok := c.Get(CtxtUserID)
-	if !ok {
-		ResponseError(c, CodeNeedLogin)
+	// 尝试获取用户ID，但不处理错误
+	userID, _ := getCurrentUserIDInt64(c)
+	if userID == 0 {
+		// 如果是未登录状态，返回默认的 guest 用户信息
+		ResponseSuccess(c, gin.H{
+			"id":         0,
+			"username":   "momo",
+			"email":      "",
+			"avatar_url": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+			"bio":        "我是大帅哥",
+			"role":       "guest",
+			"status":     1,
+		})
 		return
 	}
-	userID = userID.(int64)
 
-	// 查询用户信息
 	var user models.User
-	result := mysql.DB.Where("id = ?", userID).First(&user)
-	if result.Error != nil {
-		ResponseError(c, CodeServerBusy)
+	if err := mysql.DB.First(&user, userID).Error; err != nil {
+		// 如果用户不存在，也返回默认的 guest 用户信息
+		ResponseSuccess(c, gin.H{
+			"id":         0,
+			"username":   "momo",
+			"email":      "",
+			"avatar_url": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+			"bio":        "我是大帅哥",
+			"role":       "guest",
+			"status":     1,
+		})
 		return
 	}
-	if result.RowsAffected == 0 {
-		ResponseError(c, CodeUserNotExist)
-		return
-	}
 
-	response := ProfileResponse{
-		UserID:   user.ID,
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.AvatarURL,
-		Bio:      user.Bio,
-	}
-
-	ResponseSuccess(c, response)
-}
-
-func CheckAdminPermission(c *gin.Context) {
-	// 从URL参数获取用户ID
-	userIDStr := c.Param("id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	// 获取用户角色
+	userIDStr := strconv.FormatInt(userID, 10)
+	role, err := rbac.GetUserRole(userIDStr)
 	if err != nil {
-		ResponseError(c, CodeInvalidParam)
-		return
+		role = "guest"
 	}
 
-	enforcer, exists := c.Get("enforcer")
-	if !exists {
-		enforcer = rbac.Enforcer
-	}
-
-	e := enforcer.(*casbin.Enforcer)
-
-	// 检查用户是否有 admin 角色
-	isAdmin, err := e.HasRoleForUser(fmt.Sprintf("%d", userID), "admin")
-	if err != nil {
-		zap.L().Error("检查管理员权限失败", zap.Error(err))
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-
-	ResponseSuccess(c, gin.H{"is_admin": isAdmin})
+	ResponseSuccess(c, gin.H{
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"avatar_url": user.AvatarURL,
+		"bio":        user.Bio,
+		"role":       role,
+		"status":     user.Status,
+	})
 }
 
 func GetUserLists(c *gin.Context) {
@@ -335,12 +361,22 @@ func GetUserLists(c *gin.Context) {
 	// 构造返回数据
 	userList := make([]gin.H, 0, len(users))
 	for _, user := range users {
+		// 获取用户角色
+		role, err := rbac.GetUserRole(strconv.FormatInt(user.ID, 10))
+		if err != nil {
+			zap.L().Error("get user role failed",
+				zap.Int64("user_id", user.ID),
+				zap.Error(err))
+			role = "user" // 默认角色
+		}
+
 		userList = append(userList, gin.H{
-			"id":         user.ID,
+			"id":         strconv.FormatInt(user.ID, 10),
 			"username":   user.Username,
 			"email":      user.Email,
 			"avatar":     user.AvatarURL,
 			"bio":        user.Bio,
+			"role":       role,
 			"created_at": user.CreatedAt,
 		})
 	}
@@ -348,31 +384,5 @@ func GetUserLists(c *gin.Context) {
 	ResponseSuccess(c, gin.H{
 		"total": total,
 		"users": userList,
-	})
-}
-
-// GetUserRole 获取当前用户的角色
-func GetUserRole(c *gin.Context) {
-	// 从上下文获取用户ID
-	userID, exists := c.Get(CtxtUserID)
-	if !exists {
-		ResponseError(c, CodeNeedLogin)
-		return
-	}
-
-	// 转换为字符串（因为 casbin 中存储的是字符串）
-	userIDStr := fmt.Sprintf("%v", userID)
-
-	// 获取用户角色
-	role, err := rbac.GetUserRole(userIDStr)
-	if err != nil {
-		zap.L().Error("get user role failed", zap.Error(err))
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-
-	ResponseSuccess(c, gin.H{
-		"user_id": userID,
-		"role":    role,
 	})
 }

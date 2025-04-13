@@ -14,6 +14,7 @@ export default createStore({
     SET_USERINFO(state, userInfo) {
       state.userInfo = {
         ...userInfo,
+        userID: String(userInfo.userID)
       }
       localStorage.setItem('userInfo', JSON.stringify(state.userInfo))
     },

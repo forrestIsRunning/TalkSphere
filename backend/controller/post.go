@@ -1,14 +1,15 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/mysql"
-	"TalkSphere/pkg/upload"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -41,16 +42,9 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
@@ -223,23 +217,15 @@ func GetPostDetail(c *gin.Context) {
 
 // DeletePost 删除帖子
 func DeletePost(c *gin.Context) {
-	postIDStr := c.Param("id")
-	postID, err := strconv.ParseInt(postIDStr, 10, 64)
+	postID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
@@ -266,10 +252,15 @@ func DeletePost(c *gin.Context) {
 
 // UpdatePost 更新帖子
 func UpdatePost(c *gin.Context) {
-	postIDStr := c.Param("id")
-	postID, err := strconv.ParseInt(postIDStr, 10, 64)
+	postID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
@@ -279,18 +270,6 @@ func UpdatePost(c *gin.Context) {
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
 	var post models.Post
 	if err := mysql.DB.First(&post, postID).Error; err != nil {
 		ResponseError(c, CodeInvalidParam)
@@ -438,22 +417,28 @@ func GetBoardPosts(c *gin.Context) {
 			"comment_count": post.CommentCount,
 			"created_at":    post.CreatedAt,
 			"updated_at":    post.UpdatedAt,
-			"author": map[string]interface{}{
+		}
+
+		// 处理作者信息
+		if post.Author != nil {
+			postData["author"] = map[string]interface{}{
 				"id":         post.Author.ID,
 				"username":   post.Author.Username,
 				"avatar_url": post.Author.AvatarURL,
-			},
+			}
 		}
 
 		// 处理图片
 		var images []map[string]interface{}
-		for _, img := range post.Images {
-			images = append(images, map[string]interface{}{
-				"id":         img.ID,
-				"url":        img.ImageURL,
-				"post_id":    img.PostID,
-				"created_at": img.CreatedAt,
-			})
+		if len(post.Images) > 0 {
+			for _, img := range post.Images {
+				images = append(images, map[string]interface{}{
+					"id":         img.ID,
+					"url":        img.ImageURL,
+					"post_id":    img.PostID,
+					"created_at": img.CreatedAt,
+				})
+			}
 		}
 		postData["images"] = images
 
@@ -492,18 +477,10 @@ func UploadPostImage(c *gin.Context) {
 		zap.String("filename", file.Filename),
 		zap.Int64("size", file.Size))
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		zap.L().Error("未找到用户ID")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		zap.L().Error("用户ID类型断言失败",
-			zap.Any("user_id_interface", userIDInterface))
-		ResponseError(c, CodeServerBusy)
 		return
 	}
 	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
@@ -550,24 +527,13 @@ func UploadPostImage(c *gin.Context) {
 
 // GetUserPosts 获取用户的帖子列表
 func GetUserPosts(c *gin.Context) {
-	zap.L().Info("开始获取用户帖子列表")
-
-	// 从上下文获取用户ID
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		zap.L().Error("未找到用户ID")
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		zap.L().Error("用户ID类型断言失败",
-			zap.Any("userIDInterface", userIDInterface))
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
+	zap.L().Info("开始获取用户帖子列表")
 
 	// 获取分页参数
 	page, size := getPageInfo(c)
@@ -633,24 +599,13 @@ func GetUserPosts(c *gin.Context) {
 
 // GetUserLikedPosts 获取用户点赞的帖子
 func GetUserLikedPosts(c *gin.Context) {
-	zap.L().Info("开始获取用户点赞的帖子")
-
-	// 从上下文获取用户ID
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		zap.L().Error("未找到用户ID")
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		zap.L().Error("用户ID类型断言失败",
-			zap.Any("userIDInterface", userIDInterface))
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
+	zap.L().Info("开始获取用户点赞的帖子")
 
 	// 获取分页参数
 	page, size := getPageInfo(c)
@@ -742,23 +697,13 @@ func getUserLikedPosts(userID int64, page, size int64) ([]models.Post, int64, er
 
 // GetUserFavoritePosts 获取用户收藏的帖子
 func GetUserFavoritePosts(c *gin.Context) {
-	zap.L().Info("开始获取用户收藏的帖子")
-
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		zap.L().Error("未找到用户ID")
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		zap.L().Error("用户ID类型断言失败",
-			zap.Any("userIDInterface", userIDInterface))
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	zap.L().Info("获取到用户ID", zap.Int64("user_id", userID))
+	zap.L().Info("开始获取用户收藏的帖子")
 
 	// 获取分页参数
 	page, size := getPageInfo(c)

@@ -61,7 +61,6 @@ import { useStore } from 'vuex'
 import { login } from '../api/user'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import { isAdmin } from '@/utils/permission'
 
 export default {
   name: 'LoginPage',
@@ -102,17 +101,19 @@ export default {
         console.log('登录响应:', res.data)
         
         if (res.data.code === 1000) {
-          const { token, userID, username } = res.data.data
+          const { token, userID, username, role } = res.data.data
+          console.log('原始登录响应:', res.data.data)
           
           // 存储用户信息
           store.commit('SET_TOKEN', token)
-          store.commit('SET_USERINFO', { userID, username })
+          store.commit('SET_USERINFO', { 
+            userID: String(userID),
+            username,
+            role
+          })
           
-          // 检查是否是管理员账号
-          const isAdminUser = await isAdmin(userID)
-          console.log('是否是管理员:', isAdminUser)
-          
-          if (isAdminUser) {
+          // 根据角色判断跳转
+          if (role === 'admin' || role === 'super_admin') {
             ElMessage.success('管理员登录成功')
             router.push('/admin')
             return
@@ -121,7 +122,7 @@ export default {
           // 如果是管理员登录页面但不是管理员账号
           if (props.isAdminLogin) {
             ElMessage.error('非管理员账号，请使用管理员账号登录')
-            store.commit('CLEAR_USER_INFO')
+            store.commit('CLEAR_USER')
             return
           }
           

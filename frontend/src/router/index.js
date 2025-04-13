@@ -5,12 +5,10 @@ import Home from '../views/Home.vue'
 import UserProfile from '../views/UserProfile.vue'
 import store from '../store'
 import { ElMessage } from 'element-plus'
-import { isAdmin } from '@/utils/permission'
 
 import CreatePost from '../views/CreatePost.vue'
 import PostDetail from '../views/PostDetail.vue'
 import AdminHome from '../views/AdminHome.vue'
-import {getUserProfile} from "@/api/user";
 
 const routes = [
   {
@@ -75,6 +73,12 @@ const routes = [
         path: 'users',
         name: 'UserManagement',
         component: () => import('../views/UserManagement.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'permissions',
+        name: 'Permissions',
+        component: () => import('../views/admin/Permissions.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
       },
       {
@@ -165,50 +169,28 @@ const router = createRouter({
 
 // 改进的路由守卫
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem('token')
-  const userInfo = store.state.userInfo
-
-  if (to.meta.requiresAuth) {
-    if (!token) {
-      next({ path: '/login', query: { redirect: to.fullPath } })
+  // 检查是否需要认证
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // 检查是否已登录
+    if (!store.state.userInfo) {
+      ElMessage.warning('请先登录')
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      })
       return
     }
-    
-    // 如果有token但没有用户信息，尝试获取用户信息
-    if (token && (!userInfo || !userInfo.userID)) {
-      try {
-        const res = await getUserProfile()
-        if (res.data.code === 1000) {
-          store.commit('SET_USERINFO', res.data.data)
-          // 检查管理员权限
-          if (to.meta.requiresAdmin && !(await isAdmin(res.data.data.userID))) {
-            ElMessage.error('需要管理员权限')
-            next({ path: '/' })
-            return
-          }
-          next()
-          return
-        } else {
-          // 获取用户信息失败，清除token并跳转到登录页
-          store.dispatch('logout')
-          next({ path: '/login', query: { redirect: to.fullPath } })
-          return
-        }
-      } catch (error) {
-        store.dispatch('logout')
-        next({ path: '/login', query: { redirect: to.fullPath } })
+
+    // 检查是否需要管理员权限
+    if (to.matched.some(record => record.meta.requiresAdmin)) {
+      // 检查用户角色
+      if (store.state.userInfo.role !== 'admin' && store.state.userInfo.role !== 'super_admin') {
+        ElMessage.error('需要管理员权限')
+        next('/')
         return
       }
     }
   }
-  
-  // 已有用户信息，检查管理员权限
-  if (to.meta.requiresAdmin && !(await isAdmin(userInfo.userID))) {
-    ElMessage.error('需要管理员权限')
-    next({ path: '/' })
-    return
-  }
-  
   next()
 })
 

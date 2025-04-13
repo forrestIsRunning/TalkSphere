@@ -1,8 +1,8 @@
 package redis
 
 import (
-	"TalkSphere/setting"
 	"fmt"
+	"github.com/TalkSphere/backend/setting"
 	"github.com/go-redis/redis"
 	"go.uber.org/zap"
 )

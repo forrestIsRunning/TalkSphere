@@ -1,8 +1,8 @@
 package mysql
 
 import (
-	"TalkSphere/setting"
 	"fmt"
+	"github.com/TalkSphere/backend/setting"
 	"time"
 
 	"go.uber.org/zap"

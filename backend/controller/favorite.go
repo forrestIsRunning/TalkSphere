@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"TalkSphere/models"
-	"TalkSphere/pkg/mysql"
-	"net/http"
 	"strconv"
+
+	"github.com/TalkSphere/backend/models"
+	"github.com/TalkSphere/backend/pkg/mysql"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -31,16 +31,9 @@ func CreateFavorite(c *gin.Context) {
 		return
 	}
 
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
-		return
-	}
-
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
@@ -127,18 +120,12 @@ func CreateFavorite(c *gin.Context) {
 // @Failure 500 {object} Response "服务器内部错误"
 // @Router /favorites [get]
 func GetUserFavorites(c *gin.Context) {
-	userIDInterface, exists := c.Get(CtxtUserID)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
 		return
 	}
 
-	// 正确的类型断言
-	userID, ok := userIDInterface.(int64)
-	if !ok {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
 	page, size := getPageInfo(c)
 
 	var favorites []models.Favorite

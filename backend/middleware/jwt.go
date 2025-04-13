@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"TalkSphere/controller"
-	"TalkSphere/pkg/jwt"
-	"TalkSphere/pkg/rbac"
-	"strconv"
 	"strings"
+
+	"github.com/TalkSphere/backend/controller"
+	"github.com/TalkSphere/backend/pkg/jwt"
+	"github.com/TalkSphere/backend/pkg/rbac"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,8 +28,18 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		// parts[1] 是获取的 tokenString, 我们使用之前定义好的解析 JWT 的函数来解析它
-		mc, err := jwt.ParseToken(parts[1])
+		// parts[1] 是获取的 tokenString
+		token := parts[1]
+		// 如果是 guest_token_anonymous，设置默认的 guest 用户信息
+		if token == "guest_token_anonymous" {
+			c.Set(controller.CtxtUserID, "0")
+			c.Set(controller.CtxUserName, "guest")
+			c.Set(ROLE, "guest")
+			c.Next()
+			return
+		}
+		// 否则正常解析 JWT token
+		mc, err := jwt.ParseToken(token)
 		if err != nil {
 			controller.ResponseError(c, controller.CodeInvalidToken)
 			c.Abort()
@@ -39,7 +49,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		c.Set(controller.CtxUserName, mc.Username)
 
 		// 获取并设置用户角色
-		role, err := rbac.GetUserRole(strconv.Itoa(int(mc.UserID)))
+		role, err := rbac.GetUserRole(mc.UserID)
 		if err != nil {
 			controller.ResponseError(c, controller.CodeServerBusy)
 			c.Abort()
