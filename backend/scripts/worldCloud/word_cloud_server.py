@@ -25,7 +25,7 @@ def generate_wordcloud():
         logging.info(f"接收到的文本长度: {len(text)}")
         
         # 使用绝对路径
-        base_dir = "/backend/scripts"  # 修改为你的实际路径
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 获取脚本所在目录的父目录
         save_dir = os.path.join(base_dir, 'wordcloud_images')
         
         # 检查并创建保存目录

@@ -14,6 +14,7 @@ p, admin, /api/profile, GET
 p, admin, /api/posts/user/*, *
 p, admin, /api/likes/*, *
 p, admin, /api/favorites/*, *
+p, admin, /api/analysis/posts/wordcloud, GET
 
 # 普通用户权限
 p, user, /api/profile, GET

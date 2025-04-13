@@ -9,6 +9,7 @@ python3 -m venv venv
 source venv/bin/activate   # 激活后命令行前面会出现 (venv)
 
 # 4. 安装所需的包
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple flask
 pip install -i https://pypi.tuna.tsinghua.edu.cn/simple wordcloud jieba pillow cos-python-sdk-v5
 
 # 5. 验证安装
