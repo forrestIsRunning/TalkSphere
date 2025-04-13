@@ -266,36 +266,55 @@ func UpdateUserAvatar(c *gin.Context) {
 	})
 }
 
-// GetUserProfile 获取用户详情
+// GetUserProfile 获取用户信息
 func GetUserProfile(c *gin.Context) {
-	// 获取当前用户ID
-	userID, err := getCurrentUserIDInt64(c)
-	if err != nil {
-		ResponseError(c, CodeNeedLogin)
+	// 尝试获取用户ID，但不处理错误
+	userID, _ := getCurrentUserIDInt64(c)
+	if userID == 0 {
+		// 如果是未登录状态，返回默认的 guest 用户信息
+		ResponseSuccess(c, gin.H{
+			"id":         0,
+			"username":   "momo",
+			"email":      "",
+			"avatar_url": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+			"bio":        "我是大帅哥",
+			"role":       "guest",
+			"status":     1,
+		})
 		return
 	}
 
-	// 查询用户信息
 	var user models.User
-	result := mysql.DB.Where("id = ?", userID).First(&user)
-	if result.Error != nil {
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	if result.RowsAffected == 0 {
-		ResponseError(c, CodeUserNotExist)
+	if err := mysql.DB.First(&user, userID).Error; err != nil {
+		// 如果用户不存在，也返回默认的 guest 用户信息
+		ResponseSuccess(c, gin.H{
+			"id":         0,
+			"username":   "momo",
+			"email":      "",
+			"avatar_url": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+			"bio":        "我是大帅哥",
+			"role":       "guest",
+			"status":     1,
+		})
 		return
 	}
 
-	response := ProfileResponse{
-		UserID:   user.ID,
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.AvatarURL,
-		Bio:      user.Bio,
+	// 获取用户角色
+	userIDStr := strconv.FormatInt(userID, 10)
+	role, err := rbac.GetUserRole(userIDStr)
+	if err != nil {
+		role = "guest"
 	}
 
-	ResponseSuccess(c, response)
+	ResponseSuccess(c, gin.H{
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"avatar_url": user.AvatarURL,
+		"bio":        user.Bio,
+		"role":       role,
+		"status":     user.Status,
+	})
 }
 
 func GetUserLists(c *gin.Context) {

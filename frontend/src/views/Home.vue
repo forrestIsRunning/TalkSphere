@@ -130,7 +130,12 @@
             </div>
 
             <div class="post-cover" v-if="post.images?.length">
-              <el-image :src="post.images[0].ImageURL" fit="cover" />
+              <el-image 
+                :src="post.images[0].ImageURL" 
+                fit="cover"
+                :preview-src-list="[]"
+                :hide-on-click-modal="true"
+              />
             </div>
           </div>
         </div>
@@ -158,9 +163,9 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getAllBoards } from '../api/board'
 import { getBoardPosts } from '../api/post'
-import { getUserProfile } from '../api/user'
 import dayjs from 'dayjs'
 import { View, ChatLineRound, Search } from '@element-plus/icons-vue'
+import { getUserProfile } from '../api/user'
 
 export default {
   name: 'HomePage',
@@ -308,11 +313,27 @@ export default {
         const res = await getUserProfile()
         if (res.data.code === 1000) {
           store.commit('SET_USERINFO', res.data.data)
+        } else {
+          // 如果返回的不是成功码，设置默认的 guest 用户信息
+          setDefaultGuestInfo()
         }
       } catch (error) {
         console.error('获取用户信息失败:', error)
-        ElMessage.error('获取用户信息失败')
+        // 任何错误情况下都设置默认的 guest 用户信息
+        setDefaultGuestInfo()
       }
+    }
+
+    const setDefaultGuestInfo = () => {
+      store.commit('SET_USERINFO', {
+        id: 0,
+        username: 'momo',
+        email: '',
+        avatar_url: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+        bio: '我是大帅哥',
+        role: 'guest',
+        status: 1
+      })
     }
 
     const handleSearch = () => {

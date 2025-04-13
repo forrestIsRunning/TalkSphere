@@ -36,6 +36,8 @@ p, user, /api/user/role, GET
 p, guest, /api/boards, GET
 p, guest, /api/posts/*, GET
 p, guest, /api/comments/post/*, GET
+p, guest, /api/profile, GET
+p, guest, /api/user/role, GET
 
 # 角色继承关系
 g, admin, user
