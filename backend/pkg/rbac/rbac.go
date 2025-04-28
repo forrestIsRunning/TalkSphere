@@ -24,16 +24,82 @@ func InitCasbin() {
 		zap.L().Fatal("failed to initialize casbin adapter", zap.Error(err))
 	}
 
-	// Load both model and policy files when creating enforcer
-	enforcer, err := casbin.NewEnforcer("conf/rbac_model.conf", "conf/rbac_policy.csv")
+	modelPath := "conf/rbac_model.conf"
+	policyPath := "conf/rbac_policy.csv"
+
+	// 创建enforcer，使用模型配置文件和数据库适配器
+	enforcer, err := casbin.NewEnforcer(modelPath, adapter)
 	if err != nil {
 		zap.L().Fatal("failed to create casbin enforcer", zap.Error(err))
 	}
 
-	// Set the adapter and save policy to DB
-	enforcer.SetAdapter(adapter)
-	if err := enforcer.SavePolicy(); err != nil {
-		zap.L().Fatal("failed to save policy to DB", zap.Error(err))
+	// 检查数据库中是否有策略
+	var count int64
+	if err := mysql.DB.Table("casbin_rule").Count(&count).Error; err != nil {
+		zap.L().Fatal("failed to check policy existence", zap.Error(err))
+	}
+
+	zap.L().Info("Current policy count in database", zap.Int64("count", count))
+
+	// 如果数据库中没有策略，则从 CSV 文件加载
+	if count == 0 {
+		zap.L().Info("No policy found in database, loading from CSV file")
+
+		// 创建一个临时的 enforcer 来加载 CSV 文件
+		tmpEnforcer, err := casbin.NewEnforcer(modelPath, policyPath)
+		if err != nil {
+			zap.L().Fatal("failed to create temporary enforcer", zap.Error(err))
+		}
+
+		// 获取策略规则
+		rules, err := tmpEnforcer.GetPolicy()
+		if err != nil {
+			zap.L().Fatal("failed to get policies from CSV", zap.Error(err))
+		}
+		zap.L().Info("Loaded policies from CSV", zap.Int("rules_count", len(rules)))
+
+		groupingRules, err := tmpEnforcer.GetGroupingPolicy()
+		if err != nil {
+			zap.L().Fatal("failed to get grouping policies from CSV", zap.Error(err))
+		}
+		zap.L().Info("Loaded grouping policies from CSV", zap.Int("grouping_rules_count", len(groupingRules)))
+
+		// 将规则添加到主 enforcer
+		if len(rules) > 0 {
+			_, err = enforcer.AddPolicies(rules)
+			if err != nil {
+				zap.L().Fatal("failed to add policies", zap.Error(err))
+			}
+			zap.L().Info("Added policies to enforcer", zap.Int("count", len(rules)))
+		}
+
+		// 添加角色继承规则
+		if len(groupingRules) > 0 {
+			_, err = enforcer.AddGroupingPolicies(groupingRules)
+			if err != nil {
+				zap.L().Fatal("failed to add grouping policies", zap.Error(err))
+			}
+			zap.L().Info("Added grouping policies to enforcer", zap.Int("count", len(groupingRules)))
+		}
+
+		// 保存到数据库
+		if err := enforcer.SavePolicy(); err != nil {
+			zap.L().Fatal("failed to save policy to DB", zap.Error(err))
+		}
+		zap.L().Info("Successfully saved policies to database")
+
+		// 验证策略是否已保存
+		var newCount int64
+		if err := mysql.DB.Table("casbin_rule").Count(&newCount).Error; err != nil {
+			zap.L().Error("failed to check new policy count", zap.Error(err))
+		}
+		zap.L().Info("New policy count in database", zap.Int64("count", newCount))
+	} else {
+		zap.L().Info("Loading policy from database")
+		// 从数据库加载策略
+		if err := enforcer.LoadPolicy(); err != nil {
+			zap.L().Fatal("failed to load policy from database", zap.Error(err))
+		}
 	}
 
 	// 启用自动保存

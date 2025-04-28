@@ -8,11 +8,15 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@tinymce/tinymce-vue": "^4.0.7",
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.7.9",
     "core-js": "^3.8.3",
     "dayjs": "^1.11.13",
     "echarts": "^5.6.0",
     "element-plus": "^2.9.2",
+    "tinymce-i18n": "^25.3.17",
     "vue": "^3.2.13",
     "vue-router": "^4.5.0",
     "vuex": "^4.1.0"

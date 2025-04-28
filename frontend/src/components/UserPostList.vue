@@ -22,15 +22,29 @@
             </div>
             <div class="post-content" @click="goToPost(post.id)">
               <h3>{{ post.title }}</h3>
-              <p>{{ truncateContent(post.content || '') }}</p>
-              <div v-if="post.images?.length" class="post-images">
-                <el-image 
-                  v-for="img in post.images.slice(0, 3)" 
-                  :key="img.ID"
-                  :src="img.ImageURL"
-                  :preview-src-list="[img.ImageURL]"
-                  fit="cover"
-                />
+              <div class="rich-content" v-html="truncateContent(post.content || '')"></div>
+              <div class="post-images" v-if="post.images?.length">
+                <div v-for="image in post.images" :key="image.id" class="image-container">
+                  <el-image 
+                    :src="image.url"
+                    :preview-src-list="post.images.map(img => img.url)"
+                    fit="cover"
+                    class="post-image"
+                  >
+                    <template #error>
+                      <div class="image-error">
+                        <el-icon><picture-filled /></el-icon>
+                        <span>加载失败</span>
+                      </div>
+                    </template>
+                    <template #placeholder>
+                      <div class="image-placeholder">
+                        <el-icon class="is-loading"><loading /></el-icon>
+                        <span>加载中</span>
+                      </div>
+                    </template>
+                  </el-image>
+                </div>
               </div>
             </div>
             <div class="post-footer">
@@ -69,8 +83,9 @@ import { ref, onMounted, defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { formatTime } from '@/utils/time'
+import { PictureFilled, Loading } from '@element-plus/icons-vue'
 
-const defaultAvatar = '/defaultAvatar.jpg'
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 const props = defineProps({
   fetchPosts: {
@@ -114,7 +129,11 @@ const loadPosts = async () => {
 
 const truncateContent = (content) => {
   if (!content) return ''
-  return content.length > 200 ? content.slice(0, 200) + '...' : content
+  // 创建一个临时的 div 来解析 HTML 内容
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = content
+  const textContent = tempDiv.textContent || tempDiv.innerText
+  return textContent.length > 200 ? textContent.slice(0, 200) + '...' : textContent
 }
 
 const goToPost = (postId) => {
@@ -141,7 +160,11 @@ onMounted(() => {
 
 <script>
 export default {
-  name: 'UserPostList'
+  name: 'UserPostList',
+  components: {
+    PictureFilled,
+    Loading
+  }
 }
 </script>
 
@@ -185,14 +208,45 @@ export default {
 
 .post-images {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
 }
 
-.post-images .el-image {
-  width: 150px;
-  height: 150px;
-  border-radius: 4px;
+.image-container {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+}
+
+.image-error, .image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background-color: #f5f7fa;
+}
+
+.image-error .el-icon, .image-placeholder .el-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.image-error span, .image-placeholder span {
+  font-size: 12px;
+  color: #909399;
 }
 
 .post-footer {
@@ -231,5 +285,41 @@ export default {
 
 .empty {
   padding: 40px 0;
+}
+
+.rich-content {
+  overflow: hidden;
+  line-height: 1.6;
+  color: #333;
+}
+
+.rich-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.rich-content :deep(p) {
+  margin: 8px 0;
+}
+
+.rich-content :deep(a) {
+  color: #409eff;
+  text-decoration: none;
+}
+
+.rich-content :deep(pre) {
+  background-color: #f6f8fa;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.rich-content :deep(blockquote) {
+  border-left: 4px solid #dcdfe6;
+  margin: 10px 0;
+  padding-left: 10px;
+  color: #666;
 }
 </style> 

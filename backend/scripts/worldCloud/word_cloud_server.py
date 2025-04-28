@@ -5,15 +5,38 @@ from wordcloud import WordCloud
 import time
 import logging
 import sys
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
 
+# 获取当前脚本所在目录
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 # 配置日志
+log_file = os.path.join(current_dir, 'word_cloud_server.log')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# 文件处理器
+file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
+file_handler.setFormatter(formatter)
+
+# 控制台处理器
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(formatter)
+
+# 配置根日志记录器
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    stream=sys.stdout
+    handlers=[file_handler, console_handler]
 )
+
+# 获取当前脚本所在目录
+save_dir = os.path.join(current_dir, 'wordcloud_images')
+
+# 确保保存目录存在
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+    logging.info(f"创建词云图保存目录: {save_dir}")
 
 @app.route('/generate_wordcloud', methods=['POST'])
 def generate_wordcloud():
@@ -22,31 +45,14 @@ def generate_wordcloud():
         data = request.get_json()
         text = data.get('text', '')
         
-        logging.info(f"接收到的文本长度: {len(text)}")
-        
-        # 使用绝对路径
-        base_dir = "/backend/scripts"  # 修改为你的实际路径
-        save_dir = os.path.join(base_dir, 'wordcloud_images')
-        
-        # 检查并创建保存目录
-        try:
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-                logging.info(f"创建目录: {save_dir}")
-            
-            # 检查目录权限
-            if not os.access(save_dir, os.W_OK):
-                logging.error(f"没有写入权限: {save_dir}")
-                return jsonify({
-                    "success": False,
-                    "error": f"没有写入权限: {save_dir}"
-                }), 500
-        except Exception as e:
-            logging.error(f"创建目录失败: {str(e)}")
+        if not text:
+            logging.error("接收到的文本为空")
             return jsonify({
                 "success": False,
-                "error": f"创建目录失败: {str(e)}"
-            }), 500
+                "error": "文本内容不能为空"
+            }), 400
+        
+        logging.info(f"接收到的文本长度: {len(text)}")
         
         # 加载停用词
         stop_words = set([
@@ -65,7 +71,7 @@ def generate_wordcloud():
         
         # 创建词云对象
         wordcloud = WordCloud(
-            font_path='/System/Library/Fonts/PingFang.ttc',  # 使用支持中文的字体
+            font_path='/System/Library/Fonts/PingFang.ttc',  # 使用系统字体
             width=800,
             height=400,
             background_color='white',
@@ -109,7 +115,13 @@ def generate_wordcloud():
 
 if __name__ == '__main__':
     # 确保工作目录正确
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    os.chdir(current_dir)
     logging.info(f"当前工作目录: {os.getcwd()}")
     
-    app.run(host='127.0.0.1', port=5000) 
+    # 创建字体目录
+    font_dir = os.path.join(current_dir, 'fonts')
+    if not os.path.exists(font_dir):
+        os.makedirs(font_dir)
+        logging.info(f"创建字体目录: {font_dir}")
+    
+    app.run(host='127.0.0.1', port=5008) 

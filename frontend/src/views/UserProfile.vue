@@ -8,7 +8,7 @@
       <div class="avatar-container">
         <el-avatar 
           :size="100" 
-          :src="userProfile.avatar || defaultAvatar"
+          :src="userProfile.avatar_url || defaultAvatar"
           @error="() => true"
         />
         <el-upload

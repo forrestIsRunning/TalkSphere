@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/TalkSphere/backend/pkg/mysql"
-	"github.com/TalkSphere/backend/pkg/oss"
-	"github.com/TalkSphere/backend/setting"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/oss"
+	"github.com/TalkSphere/backend/setting"
 
 	"go.uber.org/zap"
 
@@ -559,7 +560,7 @@ func GetPostsWordCloud(c *gin.Context) {
 
 	// 发送请求到Python服务
 	resp, err := http.Post(
-		"http://127.0.0.1:5000/generate_wordcloud",
+		"http://127.0.0.1:5008/generate_wordcloud",
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
