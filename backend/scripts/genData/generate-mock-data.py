@@ -117,14 +117,29 @@ def generate_post_content():
 def register_user(username, password, email, bio, avatar_url):
     """注册用户"""
     try:
-        response = requests.post(f"{BASE_URL}/register", json={
+        response = requests.post(f"{BASE_URL}/api/register", json={
             "username": username,
             "password": password,
             "email": email,
             "bio": bio,
             "avatar_url": avatar_url
         })
-        return response.json()
+        
+        # 打印响应内容以便调试
+        print(f"注册响应状态码: {response.status_code}")
+        print(f"注册响应内容: {response.text}")
+        
+        # 尝试解析JSON
+        try:
+            return response.json()
+        except json.JSONDecodeError as e:
+            print(f"JSON解析错误: {str(e)}")
+            print(f"原始响应: {response.text}")
+            return None
+            
+    except requests.exceptions.RequestException as e:
+        print(f"请求错误: {str(e)}")
+        return None
     except Exception as e:
         print(f"注册用户失败: {str(e)}")
         return None
@@ -133,17 +148,31 @@ def register_user(username, password, email, bio, avatar_url):
 def create_post(token, title, content, board_id, tags):
     """创建帖子"""
     try:
-        headers = {"Authorization": token}
+        headers = {"Authorization": token}  # token 已经包含 Bearer 前缀
         response = requests.post(f"{BASE_URL}/api/posts",
-                                 headers=headers,
-                                 json={
-                                     "title": title,
-                                     "content": content,
-                                     "board_id": board_id,
-                                     "tags": tags
-                                 }
-                                 )
-        return response.json()
+                               headers=headers,
+                               json={
+                                   "title": title,
+                                   "content": content,
+                                   "board_id": board_id,
+                                   "tags": tags
+                               })
+        
+        # 打印响应内容以便调试
+        print(f"创建帖子响应状态码: {response.status_code}")
+        print(f"创建帖子响应内容: {response.text}")
+        
+        # 尝试解析JSON
+        try:
+            return response.json()
+        except json.JSONDecodeError as e:
+            print(f"JSON解析错误: {str(e)}")
+            print(f"原始响应: {response.text}")
+            return None
+            
+    except requests.exceptions.RequestException as e:
+        print(f"请求错误: {str(e)}")
+        return None
     except Exception as e:
         print(f"创建帖子失败: {str(e)}")
         return None
@@ -210,11 +239,22 @@ def generate_posts(users, count):
 
         # 登录获取token
         try:
-            login_response = requests.post(f"{BASE_URL}/login", json={
+            login_response = requests.post(f"{BASE_URL}/api/login", json={
                 "username": user['username'],
                 "password": user['password']
             })
-            login_data = login_response.json()
+            
+            # 打印登录响应内容以便调试
+            print(f"登录响应状态码: {login_response.status_code}")
+            print(f"登录响应内容: {login_response.text}")
+            
+            try:
+                login_data = login_response.json()
+            except json.JSONDecodeError as e:
+                print(f"登录响应JSON解析错误: {str(e)}")
+                print(f"原始响应: {login_response.text}")
+                continue
+                
             if login_data.get('code') != 1000:
                 print(f"用户登录失败: {user['username']}")
                 continue
@@ -245,12 +285,12 @@ def generate_posts(users, count):
 def main():
     """主函数"""
     # 生成用户
-    user_count = 100 # 可以修改生成的用户数量
+    user_count = 20 # 可以修改生成的用户数量
     users = generate_users(user_count)
 
     if users:
         # 生成帖子
-        post_count = 100  # 可以修改生成的帖子数量
+        post_count = 10  # 可以修改生成的帖子数量
         generate_posts(users, post_count)
 
     print("数据生成完成！")
