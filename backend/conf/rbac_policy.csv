@@ -25,6 +25,7 @@ p, user, /api/posts/image, POST
 p, user, /api/posts/user, GET
 p, user, /api/posts/user/likes, GET
 p, user, /api/posts/user/favorites, GET
+p, user, /api/comments, POST
 p, user, /api/comments/*, *
 p, user, /api/likes/*, *
 p, user, /api/likes/status, GET
