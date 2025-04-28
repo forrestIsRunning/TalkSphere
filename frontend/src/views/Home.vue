@@ -39,7 +39,7 @@
               <div class="avatar-container">
                 <el-avatar 
                   :size="40" 
-                  :src="userInfo.avatar || defaultAvatar"
+                  :src="userInfo.avatar_url || defaultAvatar"
                 />
               </div>
               <template #dropdown>
