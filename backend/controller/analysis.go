@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/TalkSphere/backend/pkg/mysql"
-	"github.com/TalkSphere/backend/pkg/oss"
-	"github.com/TalkSphere/backend/setting"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/TalkSphere/backend/pkg/mysql"
+	"github.com/TalkSphere/backend/pkg/oss"
+	"github.com/TalkSphere/backend/setting"
 
 	"go.uber.org/zap"
 

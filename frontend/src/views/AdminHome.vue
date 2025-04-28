@@ -43,12 +43,8 @@
             <el-icon><TrendCharts /></el-icon>
             <span>数据分析</span>
           </template>
-          <el-menu-item index="/admin/analytics/users/growth">用户增长</el-menu-item>
           <el-menu-item index="/admin/analytics/active/users">最近活跃用户</el-menu-item>
-
-          <el-menu-item index="/admin/analytics/posts/growth">帖子增长</el-menu-item>
           <el-menu-item index="/admin/analytics/hot/posts">最近活跃帖子</el-menu-item>
-          <el-menu-item index="/admin/analytics/wordcloud">词云图</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
