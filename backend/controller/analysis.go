@@ -560,7 +560,7 @@ func GetPostsWordCloud(c *gin.Context) {
 
 	// 发送请求到Python服务
 	resp, err := http.Post(
-		"http://127.0.0.1:5000/generate_wordcloud",
+		"http://127.0.0.1:5008/generate_wordcloud",
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)

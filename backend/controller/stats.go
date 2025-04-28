@@ -29,10 +29,18 @@ func GetSystemStats(c *gin.Context) {
 		return
 	}
 
+	// 获取评论数量
+	commentCount, err := getCommentCount()
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
 	ResponseSuccess(c, gin.H{
-		"userCount":  userCount,
-		"postCount":  postCount,
-		"boardCount": boardCount,
+		"userCount":    userCount,
+		"postCount":    postCount,
+		"boardCount":   boardCount,
+		"commentCount": commentCount,
 	})
 }
 
@@ -61,6 +69,16 @@ func getBoardCount() (int64, error) {
 	result := mysql.DB.Model(&models.Board{}).Count(&count)
 	if result.Error != nil {
 		zap.L().Error("get board count failed", zap.Error(result.Error))
+		return 0, result.Error
+	}
+	return count, nil
+}
+
+func getCommentCount() (int64, error) {
+	var count int64
+	result := mysql.DB.Model(&models.Comment{}).Where("status = ?", 1).Count(&count)
+	if result.Error != nil {
+		zap.L().Error("get comment count failed", zap.Error(result.Error))
 		return 0, result.Error
 	}
 	return count, nil

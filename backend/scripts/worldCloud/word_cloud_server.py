@@ -124,4 +124,4 @@ if __name__ == '__main__':
         os.makedirs(font_dir)
         logging.info(f"创建字体目录: {font_dir}")
     
-    app.run(host='127.0.0.1', port=5001) 
+    app.run(host='127.0.0.1', port=5008) 
