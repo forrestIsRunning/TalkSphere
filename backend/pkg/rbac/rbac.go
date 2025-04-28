@@ -24,16 +24,35 @@ func InitCasbin() {
 		zap.L().Fatal("failed to initialize casbin adapter", zap.Error(err))
 	}
 
-	// Load both model and policy files when creating enforcer
-	enforcer, err := casbin.NewEnforcer("conf/rbac_model.conf", "conf/rbac_policy.csv")
+	// 创建enforcer
+	enforcer, err := casbin.NewEnforcer("conf/rbac_model.conf", adapter)
 	if err != nil {
 		zap.L().Fatal("failed to create casbin enforcer", zap.Error(err))
 	}
 
-	// Set the adapter and save policy to DB
-	enforcer.SetAdapter(adapter)
-	if err := enforcer.SavePolicy(); err != nil {
-		zap.L().Fatal("failed to save policy to DB", zap.Error(err))
+	// 检查数据库中是否有策略
+	hasPolicy := false
+	if err := mysql.DB.Table("casbin_rule").Select("1").Limit(1).Scan(&hasPolicy).Error; err != nil {
+		zap.L().Fatal("failed to check policy existence", zap.Error(err))
+	}
+
+	// 如果数据库中没有策略，则从文件加载
+	if !hasPolicy {
+		zap.L().Info("No policy found in database, loading from file")
+		// 从文件加载策略
+		if err := enforcer.LoadPolicy(); err != nil {
+			zap.L().Fatal("failed to load policy from file", zap.Error(err))
+		}
+		// 保存到数据库
+		if err := enforcer.SavePolicy(); err != nil {
+			zap.L().Fatal("failed to save policy to DB", zap.Error(err))
+		}
+	} else {
+		zap.L().Info("Loading policy from database")
+		// 从数据库加载策略
+		if err := enforcer.LoadPolicy(); err != nil {
+			zap.L().Fatal("failed to load policy from database", zap.Error(err))
+		}
 	}
 
 	// 启用自动保存
