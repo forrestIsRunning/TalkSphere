@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@tinymce/tinymce-vue": "^4.0.7",
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.7.9",
     "core-js": "^3.8.3",
     "dayjs": "^1.11.13",

@@ -6,6 +6,7 @@ type Post struct {
 	ID            int64       `json:"id" gorm:"primaryKey;autoIncrement"`
 	Title         string      `json:"title" gorm:"type:varchar(255);not null"`
 	Content       string      `json:"content" gorm:"type:text;not null"`
+	Excerpt       string      `json:"excerpt" gorm:"type:varchar(255)"`
 	BoardID       *int64      `json:"board_id" gorm:"column:board_id"`
 	AuthorID      *int64      `json:"author_id" gorm:"column:author_id"`
 	ViewCount     int         `json:"view_count" gorm:"default:0;comment:'观看次数'"`

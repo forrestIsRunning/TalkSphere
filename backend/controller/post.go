@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TalkSphere/backend/models"
@@ -14,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"go.uber.org/zap"
+	"golang.org/x/net/html"
 	"gorm.io/gorm"
 )
 
@@ -64,10 +66,46 @@ func CreatePost(c *gin.Context) {
 
 	sanitizedContent := p.Sanitize(req.Content)
 
+	// 生成摘要
+	div := strings.NewReader(sanitizedContent)
+	doc, err := html.Parse(div)
+	if err != nil {
+		zap.L().Error("parse html failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	var text string
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.TextNode {
+			text += n.Data
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+
+	// 清理文本
+	text = strings.TrimSpace(text)
+	// 限制摘要长度
+	const maxExcerptLength = 200
+	excerpt := text
+	if len(excerpt) > maxExcerptLength {
+		excerpt = excerpt[:maxExcerptLength] + "..."
+	}
+
+	// 检查是否包含图片
+	if strings.Contains(sanitizedContent, "<img") {
+		excerpt += " [图片]"
+	}
+
 	// 创建帖子
 	post := &models.Post{
 		Title:    req.Title,
 		Content:  sanitizedContent,
+		Excerpt:  excerpt,
 		BoardID:  &req.BoardID,
 		AuthorID: &userID,
 	}

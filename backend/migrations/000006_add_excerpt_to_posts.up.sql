@@ -1,0 +1,2 @@
+ALTER TABLE posts
+ADD COLUMN excerpt VARCHAR(255) DEFAULT NULL COMMENT '帖子摘要' AFTER content; 

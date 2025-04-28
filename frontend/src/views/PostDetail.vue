@@ -23,34 +23,10 @@
         <span class="time">发布时间：{{ formatDate(post.created_at) }}</span>
         <span class="views">阅读：{{ post.view_count || 0 }}</span>
       </div>
-      <div class="content">{{ post.content }}</div>
-      
-      <!-- 图片展示 -->
-      <div class="images" v-if="post.image_urls?.length">
-        <div v-for="(url, index) in post.image_urls" :key="index" class="image-container">
-          <el-image 
-            :src="url"
-            :preview-src-list="post.image_urls"
-            fit="cover"
-            class="post-image"
-          >
-            <template #error>
-              <div class="image-error">
-                <el-icon><PictureFilled /></el-icon>
-                <span>加载失败</span>
-              </div>
-            </template>
-            <template #placeholder>
-              <div class="image-placeholder">
-                <el-icon><Loading /></el-icon>
-                <span>加载中</span>
-              </div>
-            </template>
-          </el-image>
-        </div>
+      <div class="post-content">
+        <div v-html="post.content" class="rich-content"></div>
       </div>
-
-      <!-- 帖子统计信息 -->
+      
       <div class="post-stats">
         <span class="stat-item" @click="handleLike">
           <span :class="{ 'liked': isLiked }">👍</span>
@@ -223,7 +199,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { getPostDetail } from '../api/post'
@@ -234,6 +210,8 @@ import { Star, ChatLineRound, ArrowDown } from '@element-plus/icons-vue'
 import { getUserProfile } from '../api/user'
 import { toggleLike, getLikeStatus } from '../api/like'
 import { toggleFavorite } from '../api/favorite'
+import { ElImageViewer } from 'element-plus'
+import { createVNode, render } from 'vue'
 
 export default {
   name: 'PostDetail',
@@ -533,9 +511,32 @@ export default {
       return types[index % types.length]
     }
 
+    // 处理图片点击预览
+    const handleImageClick = (event) => {
+      if (event.target.tagName === 'IMG') {
+        const imgSrc = event.target.src
+        // 创建图片预览组件
+        const div = document.createElement('div')
+        const vnode = createVNode(ElImageViewer, {
+          urlList: [imgSrc],
+          onClose: () => {
+            render(null, div)
+          }
+        })
+        render(vnode, div)
+      }
+    }
+
     onMounted(async () => {
       await loadPost()
       await loadComments()
+      // 添加图片点击事件监听
+      document.addEventListener('click', handleImageClick)
+    })
+
+    onBeforeUnmount(() => {
+      // 移除图片点击事件监听
+      document.removeEventListener('click', handleImageClick)
     })
 
     return {
@@ -1018,5 +1019,91 @@ export default {
 
 .post-tag:hover {
   opacity: 0.85;
+}
+
+.rich-content {
+  line-height: 1.6;
+  font-size: 16px;
+  word-break: break-word;
+}
+
+.rich-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.rich-content :deep(img:hover) {
+  transform: scale(1.02);
+}
+
+.rich-content :deep(p) {
+  margin: 16px 0;
+}
+
+.rich-content :deep(h1),
+.rich-content :deep(h2),
+.rich-content :deep(h3),
+.rich-content :deep(h4),
+.rich-content :deep(h5),
+.rich-content :deep(h6) {
+  margin: 24px 0 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.rich-content :deep(ul),
+.rich-content :deep(ol) {
+  padding-left: 24px;
+  margin: 16px 0;
+}
+
+.rich-content :deep(li) {
+  margin: 8px 0;
+}
+
+.rich-content :deep(blockquote) {
+  margin: 16px 0;
+  padding: 0 16px;
+  color: #666;
+  border-left: 4px solid #ddd;
+}
+
+.rich-content :deep(code) {
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #c7254e;
+  background-color: #f9f2f4;
+  border-radius: 4px;
+}
+
+.rich-content :deep(pre) {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  margin: 16px 0;
+}
+
+.rich-content :deep(pre code) {
+  padding: 0;
+  font-size: 100%;
+  color: inherit;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.rich-content :deep(a) {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+.rich-content :deep(a:hover) {
+  text-decoration: underline;
 }
 </style> 

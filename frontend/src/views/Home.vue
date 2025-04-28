@@ -106,7 +106,7 @@
               
               <div class="post-content">
                 <h3 class="post-title">{{ post.title }}</h3>
-                <p class="post-excerpt">{{ post.content?.slice(0, 100) }}...</p>
+                <p class="post-excerpt">{{ post.excerpt || formatContent(post.content) }}</p>
                 <div class="post-tags" v-if="post.tags?.length">
                   <el-tag
                     v-for="tag in post.tags"
@@ -368,6 +368,35 @@ export default {
       loadPosts()
     }
 
+    const formatContent = (content) => {
+      if (!content) return ''
+      
+      // 创建一个临时的 div 来解析 HTML
+      const div = document.createElement('div')
+      div.innerHTML = content
+      
+      // 获取所有图片标签
+      const images = div.getElementsByTagName('img')
+      const imageCount = images.length
+      
+      // 获取纯文本内容
+      let text = div.textContent || div.innerText
+      text = text.trim()
+      
+      // 限制文本长度
+      const maxLength = 100
+      if (text.length > maxLength) {
+        text = text.substring(0, maxLength) + '...'
+      }
+      
+      // 如果有图片，添加图片提示
+      if (imageCount > 0) {
+        text += ` [${imageCount}张图片]`
+      }
+      
+      return text
+    }
+
     onMounted(async () => {
       await loadBoards()
       // 如果有板块数据，自动选择第一个板块
@@ -396,7 +425,8 @@ export default {
       searchQuery,
       searchType,
       loading,
-      handleSearch
+      handleSearch,
+      formatContent
     }
   }
 }
@@ -561,14 +591,15 @@ export default {
 }
 
 .post-excerpt {
+  color: #666;
   font-size: 14px;
-  color: #86909c;
-  margin: 0;
+  line-height: 1.5;
+  margin: 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.5;
 }
 
 .post-cover {

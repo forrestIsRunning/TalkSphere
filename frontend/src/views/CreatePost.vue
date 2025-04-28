@@ -16,12 +16,21 @@
         </el-form-item>
 
         <el-form-item label="内容" prop="content">
-          <el-input 
-            v-model="postForm.content" 
-            type="textarea" 
-            :rows="6"
-            placeholder="请输入内容（至少10个字符）"
-          />
+          <div class="editor-container">
+            <Toolbar
+              style="border-bottom: 1px solid #ccc"
+              :editor="editorRef"
+              :defaultConfig="toolbarConfig"
+              :mode="mode"
+            />
+            <Editor
+              style="height: 400px; overflow-y: hidden;"
+              v-model="postForm.content"
+              :defaultConfig="editorConfig"
+              :mode="mode"
+              @onCreated="handleCreated"
+            />
+          </div>
         </el-form-item>
 
         <el-form-item label="选择板块" prop="board_id">
@@ -52,25 +61,6 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="上传图片">
-          <el-upload
-            class="upload-demo"
-            :action="`${baseURL}/api/posts/image`"
-            :headers="uploadHeaders"
-            :on-success="handleImageSuccess"
-            :on-remove="handleImageRemove"
-            :file-list="uploadedImages"
-            list-type="picture"
-            name="image"
-            :data="{ type: 'post' }"
-          >
-            <el-button type="primary">上传图片</el-button>
-            <template #tip>
-              <div class="el-upload__tip">支持jpg/png文件</div>
-            </template>
-          </el-upload>
-        </el-form-item>
-
         <el-form-item>
           <el-button 
             type="primary" 
@@ -87,21 +77,23 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, shallowRef, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getAllBoards } from '../api/board'
 import { createPost } from '../api/post'
+import '@wangeditor/editor/dist/css/style.css'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 export default {
   name: 'CreatePost',
+  components: { Editor, Toolbar },
   setup() {
     const router = useRouter()
     const postFormRef = ref(null)
     const loading = ref(false)
     const boards = ref([])
     const baseURL = 'http://127.0.0.1:8989'
-    const uploadedImages = ref([])
 
     const postForm = ref({
       title: '',
@@ -111,6 +103,67 @@ export default {
       image_ids: []
     })
 
+    // 编辑器实例，必须用 shallowRef
+    const editorRef = shallowRef()
+    
+    // 模式
+    const mode = ref('default')
+    
+    // 工具栏配置
+    const toolbarConfig = {
+      excludeKeys: [
+        'insertVideo',
+        'uploadVideo',
+        'group-video',
+        'insertTable'
+      ]
+    }
+    
+    // 编辑器配置
+    const editorConfig = {
+      placeholder: '请输入内容...',
+      MENU_CONF: {
+        uploadImage: {
+          server: `${baseURL}/api/posts/image`,
+          fieldName: 'image',
+          headers: {
+            Authorization: localStorage.getItem('token')
+          },
+          maxFileSize: 20 * 1024 * 1024, // 20MB
+          maxNumberOfFiles: 10,
+          allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif'],
+          metaWithUrl: true,
+          customInsert: (res, insertFn) => {
+            // 从服务器响应中获取图片url
+            if (res.code === 1000) {
+              const { image_url, image_id } = res.data
+              // 将图片ID添加到表单数据中
+              postForm.value.image_ids.push(image_id)
+              // 插入图片到编辑器
+              insertFn(image_url)
+            } else {
+              ElMessage.error('图片上传失败')
+            }
+          },
+          onError: (err) => {
+            console.error('图片上传错误:', err)
+            ElMessage.error('图片上传失败')
+          }
+        }
+      }
+    }
+
+    // 组件销毁时，也及时销毁编辑器
+    onBeforeUnmount(() => {
+      const editor = editorRef.value
+      if (editor == null) return
+      editor.destroy()
+    })
+
+    const handleCreated = (editor) => {
+      editorRef.value = editor // 记录 editor 实例
+    }
+
     const rules = {
       title: [
         { required: true, message: '请输入标题', trigger: 'blur' },
@@ -118,16 +171,21 @@ export default {
       ],
       content: [
         { required: true, message: '请输入内容', trigger: 'blur' },
-        { min: 10, message: '内容至少10个字符', trigger: 'blur' }
+        { 
+          validator: (rule, value, callback) => {
+            if (value && value.length < 10) {
+              callback(new Error('内容至少10个字符'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
       ],
       board_id: [
         { required: true, message: '请选择板块', trigger: 'change' }
       ]
     }
-
-    const uploadHeaders = computed(() => ({
-      Authorization: localStorage.getItem('token')
-    }))
 
     const loadBoards = async () => {
       loading.value = true
@@ -146,26 +204,6 @@ export default {
       }
     }
 
-    const handleImageSuccess = (res) => {
-      if (res.code === 1000) {
-        uploadedImages.value.push({
-          id: res.data.image_id,
-          url: res.data.image_url
-        })
-        postForm.value.image_ids.push(res.data.image_id)
-      } else {
-        ElMessage.error('图片上传失败')
-      }
-    }
-
-    const handleImageRemove = (file) => {
-      const index = uploadedImages.value.findIndex(img => img.url === file.url)
-      if (index !== -1) {
-        uploadedImages.value.splice(index, 1)
-        postForm.value.image_ids.splice(index, 1)
-      }
-    }
-
     const submitPost = async () => {
       if (!postFormRef.value) return
       
@@ -173,8 +211,16 @@ export default {
         if (valid) {
           loading.value = true
           try {
-            console.log('提交的数据:', postForm.value)
-            const res = await createPost(postForm.value)
+            // 获取编辑器 HTML 内容
+            const content = postForm.value.content
+            
+            const postData = {
+              ...postForm.value,
+              content: content
+            }
+            
+            console.log('提交的数据:', postData)
+            const res = await createPost(postData)
             console.log('服务器响应:', res)
             if (res.data.code === 1000) {
               ElMessage.success('发表成功')
@@ -203,11 +249,12 @@ export default {
       loading,
       boards,
       baseURL,
-      uploadedImages,
-      uploadHeaders,
-      handleImageSuccess,
-      handleImageRemove,
-      submitPost
+      submitPost,
+      editorRef,
+      mode,
+      toolbarConfig,
+      editorConfig,
+      handleCreated
     }
   }
 }
@@ -240,5 +287,25 @@ h2 {
   color: #909399;
   font-size: 12px;
   margin-top: 5px;
+}
+
+.editor-container {
+  border: 1px solid #ccc;
+  z-index: 100;
+  border-radius: 4px;
+}
+
+:deep(.w-e-text-container) {
+  min-height: 300px !important;
+}
+
+:deep(.w-e-toolbar) {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+:deep(.w-e-text-container) {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 </style>
