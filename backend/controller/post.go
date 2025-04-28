@@ -12,17 +12,18 @@ import (
 	"github.com/TalkSphere/backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
+	"github.com/microcosm-cc/bluemonday"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // CreatePostRequest 创建帖子请求参数
 type CreatePostRequest struct {
-	Title    string   `json:"title" binding:"required"`
-	Content  string   `json:"content" binding:"required"`
-	BoardID  int64    `json:"board_id"`
-	Tags     []string `json:"tags"`
-	ImageIDs []int64  `json:"image_ids"` // 已上传图片的ID列表
+	Title    string   `json:"title" binding:"required,min=3,max=100"`
+	Content  string   `json:"content" binding:"required,min=10"`
+	BoardID  int64    `json:"board_id" binding:"required"`
+	Tags     []string `json:"tags" binding:"omitempty,dive,max=20"`
+	ImageIDs []int64  `json:"image_ids" binding:"omitempty,dive,min=1"`
 }
 
 // UpdatePostRequest 更新帖子请求参数
@@ -48,10 +49,25 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
+	// 对内容进行 XSS 清理
+	p := bluemonday.UGCPolicy()
+	// 允许常用的富文本标签和属性
+	p.AllowStandardURLs()
+	p.AllowStandardAttributes()
+	p.AllowImages()
+	p.AllowLists()
+	p.AllowTables()
+	// 允许常用样式
+	p.AllowStyles("text-align", "color", "background-color", "font-size", "margin", "padding")
+	// 允许 class 属性
+	p.AllowAttrs("class").Globally()
+
+	sanitizedContent := p.Sanitize(req.Content)
+
 	// 创建帖子
 	post := &models.Post{
 		Title:    req.Title,
-		Content:  req.Content,
+		Content:  sanitizedContent,
 		BoardID:  &req.BoardID,
 		AuthorID: &userID,
 	}
@@ -86,13 +102,13 @@ func CreatePost(c *gin.Context) {
 			return
 		}
 	}
-	//前端传入的
+
 	// 处理图片
 	if len(req.ImageIDs) > 0 {
 		// 验证图片所属权并更新关联
 		var images []models.PostImage
-		if err := tx.Where("id IN ? AND user_id = ? AND status = 1 AND post_id = 0",
-			req.ImageIDs, userID).Find(&images).Error; err != nil {
+		if err := tx.Where("id IN ? AND user_id = ? AND status = 1 AND (post_id = 0 OR post_id = ?)",
+			req.ImageIDs, userID, post.ID).Find(&images).Error; err != nil {
 			tx.Rollback()
 			zap.L().Error("find images failed", zap.Error(err))
 			ResponseError(c, CodeServerBusy)

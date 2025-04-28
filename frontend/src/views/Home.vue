@@ -107,6 +107,18 @@
               <div class="post-content">
                 <h3 class="post-title">{{ post.title }}</h3>
                 <p class="post-excerpt">{{ post.content?.slice(0, 100) }}...</p>
+                <div class="post-tags" v-if="post.tags?.length">
+                  <el-tag
+                    v-for="tag in post.tags"
+                    :key="tag.ID"
+                    size="small"
+                    type="info"
+                    effect="plain"
+                    class="post-tag"
+                  >
+                    {{ tag.Name }}
+                  </el-tag>
+                </div>
               </div>
 
               <div class="post-meta">
@@ -131,11 +143,24 @@
 
             <div class="post-cover" v-if="post.images?.length">
               <el-image 
-                :src="post.images[0].ImageURL" 
+                :src="post.images[0].url" 
                 fit="cover"
-                :preview-src-list="[]"
+                :preview-src-list="post.images.map(img => img.url)"
                 :hide-on-click-modal="true"
-              />
+              >
+                <template #error>
+                  <div class="image-error">
+                    <el-icon><PictureFilled /></el-icon>
+                    <span>加载失败</span>
+                  </div>
+                </template>
+                <template #placeholder>
+                  <div class="image-placeholder">
+                    <el-icon><Loading /></el-icon>
+                    <span>加载中</span>
+                  </div>
+                </template>
+              </el-image>
             </div>
           </div>
         </div>
@@ -164,7 +189,7 @@ import { ElMessage } from 'element-plus'
 import { getAllBoards } from '../api/board'
 import { getBoardPosts } from '../api/post'
 import dayjs from 'dayjs'
-import { View, ChatLineRound, Search } from '@element-plus/icons-vue'
+import { View, ChatLineRound, Search, PictureFilled, Loading } from '@element-plus/icons-vue'
 import { getUserProfile } from '../api/user'
 
 export default {
@@ -172,7 +197,9 @@ export default {
   components: {
     View,
     ChatLineRound,
-    Search
+    Search,
+    PictureFilled,
+    Loading
   },
   setup() {
     const store = useStore()
@@ -430,13 +457,13 @@ export default {
 .main-wrapper {
   display: flex;
   padding-top: 60px;
-  max-width: 1440px;
+  max-width: 1200px;
   margin: 0 auto;
   height: calc(100vh - 60px);
 }
 
 .side-nav {
-  width: 240px;
+  width: 200px;
   padding: 20px 0;
   border-right: 1px solid #e4e6eb;
   height: 100%;
@@ -460,7 +487,7 @@ export default {
 
 .content-area {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 200px;
   padding: 20px;
 }
 
@@ -502,7 +529,7 @@ export default {
   cursor: pointer;
   display: flex;
   gap: 16px;
-  max-height: 200px;
+  max-height: 180px;
   overflow: hidden;
 }
 
@@ -514,24 +541,13 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .post-user {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1d2129;
-}
-
-.post-time {
-  font-size: 12px;
-  color: #86909c;
+  gap: 8px;
 }
 
 .post-title {
@@ -548,16 +564,32 @@ export default {
   font-size: 14px;
   color: #86909c;
   margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-height: 60px; /* 限制摘要最大高度 */
+  line-height: 1.5;
+}
+
+.post-cover {
+  width: 160px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.post-cover .el-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .post-meta {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-top: auto;
 }
 
 .meta-item {
@@ -568,21 +600,15 @@ export default {
   font-size: 13px;
 }
 
-.meta-item:hover {
-  color: #1e80ff;
+.username {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d2129;
 }
 
-.post-cover {
-  width: 200px;
-  height: 150px;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.post-cover .el-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.post-time {
+  font-size: 12px;
+  color: #86909c;
 }
 
 .pagination-wrapper {
@@ -669,5 +695,28 @@ export default {
 
 .avatar-container {
   cursor: pointer;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.post-tag {
+  font-size: 12px;
+  padding: 0 8px;
+  height: 22px;
+  line-height: 20px;
+  border-radius: 4px;
+  background-color: #f2f3f5;
+  color: #86909c;
+  border: none;
+}
+
+.post-tag:hover {
+  background-color: #e4e6eb;
+  color: #1d2129;
 }
 </style> 

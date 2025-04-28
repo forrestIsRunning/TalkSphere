@@ -5,6 +5,19 @@
         <el-button @click="$router.back()">返回</el-button>
       </div>
       <h1 class="title">{{ post.title }}</h1>
+      <!-- 添加标签展示 -->
+      <div class="tags" v-if="post.tags?.length">
+        <el-tag
+          v-for="(tag, index) in post.tags"
+          :key="tag.ID"
+          :type="getTagType(index)"
+          size="small"
+          effect="light"
+          class="post-tag"
+        >
+          {{ tag.Name }}
+        </el-tag>
+      </div>
       <div class="meta">
         <span class="author">作者：{{ authorName }}</span>
         <span class="time">发布时间：{{ formatDate(post.created_at) }}</span>
@@ -14,12 +27,27 @@
       
       <!-- 图片展示 -->
       <div class="images" v-if="post.image_urls?.length">
-        <el-image 
-          v-for="(url, index) in post.image_urls"
-          :key="index"
-          :src="url"
-          :preview-src-list="post.image_urls"
-        />
+        <div v-for="(url, index) in post.image_urls" :key="index" class="image-container">
+          <el-image 
+            :src="url"
+            :preview-src-list="post.image_urls"
+            fit="cover"
+            class="post-image"
+          >
+            <template #error>
+              <div class="image-error">
+                <el-icon><PictureFilled /></el-icon>
+                <span>加载失败</span>
+              </div>
+            </template>
+            <template #placeholder>
+              <div class="image-placeholder">
+                <el-icon><Loading /></el-icon>
+                <span>加载中</span>
+              </div>
+            </template>
+          </el-image>
+        </div>
       </div>
 
       <!-- 帖子统计信息 -->
@@ -258,7 +286,10 @@ export default {
         const res = await getPostComments(route.params.id)
         console.log('评论列表响应:', res)
         if (res.data.code === 1000) {
-          comments.value = res.data.data.comments || []
+          // 按照创建时间升序排序，让最早的评论显示在前面
+          comments.value = res.data.data.comments.sort((a, b) => 
+            new Date(a.created_at) - new Date(b.created_at)
+          ) || []
           console.log('处理后的评论数据:', comments.value)
         }
       } catch (error) {
@@ -451,6 +482,7 @@ export default {
 
     // 获取评论的所有回复（包括嵌套回复）
     const getAllReplies = (comment) => {
+      if (!comment || !comment.children) return [];
       const result = [];
       const traverse = (replies, level = 0) => {
         if (!replies) return;
@@ -469,6 +501,7 @@ export default {
 
     // 计算总评论数（包括所有回复）
     const getTotalCommentCount = (comments) => {
+      if (!comments || !Array.isArray(comments)) return 0;
       let total = comments.length;
       for (const comment of comments) {
         if (comment.children?.length > 0) {
@@ -480,6 +513,7 @@ export default {
 
     // 获取评论的所有回复数量（包括所有层级）
     const getReplyCount = (comment) => {
+      if (!comment || !comment.children) return 0;
       let count = 0;
       const traverse = (replies) => {
         if (!replies) return;
@@ -493,6 +527,11 @@ export default {
       traverse(comment.children);
       return count;
     };
+
+    const getTagType = (index) => {
+      const types = ['success', 'info', 'warning', 'danger']
+      return types[index % types.length]
+    }
 
     onMounted(async () => {
       await loadPost()
@@ -524,7 +563,8 @@ export default {
       findReplyUser,
       getAllReplies,
       getTotalCommentCount,
-      getReplyCount
+      getReplyCount,
+      getTagType
     }
   }
 }
@@ -570,15 +610,60 @@ export default {
 }
 
 .images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
-  margin-top: 24px;
+  margin: 24px 0;
 }
 
-.images .el-image {
+.image-container {
+  width: 300px;
+  height: 300px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+}
+
+.post-image {
   width: 100%;
-  border-radius: 4px;
+  height: 100%;
+}
+
+.image-error, .image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7fa;
+}
+
+.image-error .el-icon, .image-placeholder .el-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.image-error span, .image-placeholder span {
+  font-size: 14px;
+  color: #909399;
+}
+
+.is-loading {
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading {
@@ -911,5 +996,27 @@ export default {
 
 .el-icon {
   transition: transform 0.3s;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.post-tag {
+  font-size: 13px;
+  padding: 0 10px;
+  height: 24px;
+  line-height: 22px;
+  border-radius: 4px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.post-tag:hover {
+  opacity: 0.85;
 }
 </style> 
