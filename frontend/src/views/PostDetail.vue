@@ -13,12 +13,12 @@
       <div class="content">{{ post.content }}</div>
       
       <!-- 图片展示 -->
-      <div class="images" v-if="post.images?.length">
+      <div class="images" v-if="post.image_urls?.length">
         <el-image 
-          v-for="img in post.images"
-          :key="img.id"
-          :src="img.url"
-          :preview-src-list="post.images.map(img => img.url)"
+          v-for="(url, index) in post.image_urls"
+          :key="index"
+          :src="url"
+          :preview-src-list="post.image_urls"
         />
       </div>
 
@@ -47,7 +47,7 @@
     <!-- 评论区域 -->
     <div class="comments-section" v-if="post">
       <div class="comments-header">
-        <h3>评论 ({{ comments.length }})</h3>
+        <h3>评论 ({{ getTotalCommentCount(comments) }})</h3>
         <div class="comment-input">
           <div class="comment-user">
             <el-avatar 
@@ -75,95 +75,112 @@
           :key="comment.id" 
           class="comment-item"
         >
-          <div class="comment-user">
+          <!-- 主评论 -->
+          <div class="comment-main">
             <el-avatar 
               :size="40" 
               :src="comment.user?.avatar_url || defaultAvatar"
+              class="comment-avatar"
             />
-            <div class="comment-info">
-              <div class="comment-username">{{ comment.user?.username || '未知用户' }}</div>
-              <div class="comment-time">{{ formatDate(comment.created_at) }}</div>
-            </div>
-          </div>
-          <div class="comment-content">{{ comment.content }}</div>
-          
-          <!-- 回复按钮 -->
-          <div class="comment-actions">
-            <span class="reply-btn" @click="showReplyInput(comment.id)">
-              回复
-            </span>
-            <span class="like-btn" @click="handleCommentLike(comment.id)">
-              <el-icon :class="{ 'liked': comment.isLiked }"><Star /></el-icon>
-              {{ comment.like_count }}
-            </span>
-            <span class="reply-count">
-              <el-icon><ChatLineRound /></el-icon>
-              {{ comment.reply_count }}
-            </span>
-          </div>
-
-          <!-- 回复输入框 -->
-          <div class="reply-input" v-if="replyingTo === comment.id">
-            <el-input
-              v-model="replyContent"
-              type="textarea"
-              :rows="2"
-              placeholder="回复评论..."
-            />
-            <div class="reply-actions">
-              <el-button size="small" @click="cancelReply">取消</el-button>
-              <el-button 
-                type="primary" 
-                size="small"
-                @click="submitReply(comment.id)"
-                :loading="submitting"
-              >回复</el-button>
-            </div>
-          </div>
-
-          <!-- 回复列表 -->
-          <div class="reply-list" v-if="comment.children?.length">
-            <div v-for="reply in comment.children" 
-              :key="reply.id" 
-              class="reply-item"
-            >
-              <div class="comment-user">
-                <el-avatar 
-                  :size="32" 
-                  :src="reply.user?.avatar_url || defaultAvatar"
-                />
-                <div class="comment-info">
-                  <div class="comment-username">{{ reply.user?.username || '未知用户' }}</div>
-                  <div class="comment-time">{{ formatDate(reply.created_at) }}</div>
-                </div>
+            <div class="comment-body">
+              <div class="comment-user-info">
+                <span class="username">{{ comment.user?.username || '未知用户' }}</span>
+                <span class="time">{{ formatDate(comment.created_at) }}</span>
               </div>
-              <div class="comment-content">{{ reply.content }}</div>
-              
-              <!-- 回复的回复按钮 -->
+              <div class="comment-content">{{ comment.content }}</div>
               <div class="comment-actions">
-                <span class="reply-btn" @click="showReplyInput(reply.id)">
+                <span class="like-btn" @click="handleCommentLike(comment.id)">
+                  <el-icon :class="{ 'liked': comment.isLiked }"><Star /></el-icon>
+                  {{ comment.like_count > 0 ? comment.like_count : '点赞' }}
+                </span>
+                <span class="reply-btn" @click="showReplyInput(comment.id)">
                   回复
                 </span>
               </div>
 
-              <!-- 回复的回复输入框 -->
-              <div class="reply-input" v-if="replyingTo === reply.id">
+              <!-- 回复输入框 -->
+              <div class="reply-input" v-if="replyingTo === comment.id">
                 <el-input
                   v-model="replyContent"
                   type="textarea"
                   :rows="2"
-                  placeholder="回复评论..."
+                  :placeholder="'回复 @' + comment.user?.username"
                 />
                 <div class="reply-actions">
                   <el-button size="small" @click="cancelReply">取消</el-button>
                   <el-button 
                     type="primary" 
                     size="small"
-                    @click="submitReply(reply.id)"
+                    @click="submitReply(comment.id)"
                     :loading="submitting"
-                  >回复</el-button>
+                  >发布</el-button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 回复区域 -->
+          <div class="reply-area" v-if="comment.children?.length > 0">
+            <div class="reply-header" @click="toggleReplyList(comment.id)">
+              <span class="reply-count">{{ getReplyCount(comment) }}条回复</span>
+              <el-icon :class="{ 'expanded': expandedComments.includes(comment.id) }">
+                <ArrowDown />
+              </el-icon>
+            </div>
+            
+            <!-- 回复列表 -->
+            <div class="reply-list" v-show="expandedComments.includes(comment.id)">
+              <template v-for="reply in getAllReplies(comment)" :key="reply.id">
+                <div class="reply-item">
+                  <div class="reply-main">
+                    <el-avatar 
+                      :size="32" 
+                      :src="reply.user?.avatar_url || defaultAvatar"
+                      class="reply-avatar"
+                    />
+                    <div class="reply-body">
+                      <div class="reply-user-info">
+                        <span class="username">{{ reply.user?.username || '未知用户' }}</span>
+                        <span class="time">{{ formatDate(reply.created_at) }}</span>
+                      </div>
+                      <div class="reply-content">
+                        <template v-if="reply.parent_id !== comment.id">
+                          回复 <span class="reference">@{{ findReplyUser(reply.parent_id) }}</span>：
+                        </template>
+                        {{ reply.content }}
+                      </div>
+                      <div class="reply-actions">
+                        <span class="like-btn" @click="handleCommentLike(reply.id)">
+                          <el-icon :class="{ 'liked': reply.isLiked }"><Star /></el-icon>
+                          {{ reply.like_count > 0 ? reply.like_count : '点赞' }}
+                        </span>
+                        <span class="reply-btn" @click="showReplyInput(reply.id)">
+                          回复
+                        </span>
+                      </div>
+
+                      <!-- 回复的回复输入框 -->
+                      <div class="reply-input" v-if="replyingTo === reply.id">
+                        <el-input
+                          v-model="replyContent"
+                          type="textarea"
+                          :rows="2"
+                          :placeholder="'回复 @' + reply.user?.username"
+                        />
+                        <div class="reply-actions">
+                          <el-button size="small" @click="cancelReply">取消</el-button>
+                          <el-button 
+                            type="primary" 
+                            size="small"
+                            @click="submitReply(reply.id)"
+                            :loading="submitting"
+                          >发布</el-button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -185,7 +202,7 @@ import { getPostDetail } from '../api/post'
 import { getPostComments, createComment } from '../api/comment'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import { Star, ChatLineRound } from '@element-plus/icons-vue'
+import { Star, ChatLineRound, ArrowDown } from '@element-plus/icons-vue'
 import { getUserProfile } from '../api/user'
 import { toggleLike, getLikeStatus } from '../api/like'
 import { toggleFavorite } from '../api/favorite'
@@ -194,7 +211,8 @@ export default {
   name: 'PostDetail',
   components: {
     Star,
-    ChatLineRound
+    ChatLineRound,
+    ArrowDown
   },
   setup() {
     const store = useStore()
@@ -208,6 +226,7 @@ export default {
     const authorName = ref('加载中...')
     const isLiked = ref(false)
     const isFavorited = ref(false)
+    const expandedComments = ref([])
     
     const defaultAvatar = computed(() => {
       return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -399,6 +418,82 @@ export default {
       }
     }
 
+    // 切换回复列表的显示/隐藏
+    const toggleReplyList = (commentId) => {
+      const index = expandedComments.value.indexOf(commentId)
+      if (index === -1) {
+        expandedComments.value.push(commentId)
+      } else {
+        expandedComments.value.splice(index, 1)
+      }
+    }
+
+    // 查找回复对象的用户名
+    const findReplyUser = (replyId) => {
+      // 递归查找评论中的用户名
+      const findInComments = (comments) => {
+        for (const comment of comments) {
+          if (comment.id === replyId) {
+            return comment.user?.username || '未知用户'
+          }
+          // 如果当前评论有子评论，递归查找
+          if (comment.children?.length > 0) {
+            const found = findInComments(comment.children)
+            if (found) return found
+          }
+        }
+        return null
+      }
+
+      const username = findInComments(comments.value)
+      return username || '未知用户'
+    }
+
+    // 获取评论的所有回复（包括嵌套回复）
+    const getAllReplies = (comment) => {
+      const result = [];
+      const traverse = (replies, level = 0) => {
+        if (!replies) return;
+        for (const reply of replies) {
+          // 为每个回复添加层级信息
+          reply.level = level;
+          result.push(reply);
+          if (reply.children?.length > 0) {
+            traverse(reply.children, level + 1);
+          }
+        }
+      };
+      traverse(comment.children);
+      return result;
+    };
+
+    // 计算总评论数（包括所有回复）
+    const getTotalCommentCount = (comments) => {
+      let total = comments.length;
+      for (const comment of comments) {
+        if (comment.children?.length > 0) {
+          total += comment.children.length;
+        }
+      }
+      return total;
+    };
+
+    // 获取评论的所有回复数量（包括所有层级）
+    const getReplyCount = (comment) => {
+      let count = 0;
+      const traverse = (replies) => {
+        if (!replies) return;
+        count += replies.length;
+        for (const reply of replies) {
+          if (reply.children?.length > 0) {
+            traverse(reply.children);
+          }
+        }
+      };
+      traverse(comment.children);
+      return count;
+    };
+
     onMounted(async () => {
       await loadPost()
       await loadComments()
@@ -423,7 +518,13 @@ export default {
       handleLike,
       handleCommentLike,
       isFavorited,
-      handleFavorite
+      handleFavorite,
+      expandedComments,
+      toggleReplyList,
+      findReplyUser,
+      getAllReplies,
+      getTotalCommentCount,
+      getReplyCount
     }
   }
 }
@@ -656,5 +757,159 @@ export default {
 
 .liked, .favorited {
   filter: brightness(1.2);
+}
+
+.comments-list {
+  margin-top: 20px;
+}
+
+.comment-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #e4e6eb;
+}
+
+.comment-main {
+  display: flex;
+  gap: 12px;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex-grow: 1;
+}
+
+.comment-user-info {
+  margin-bottom: 4px;
+}
+
+.username {
+  font-size: 13px;
+  font-weight: 500;
+  color: #61666d;
+}
+
+.time {
+  font-size: 12px;
+  color: #9499a0;
+  margin-left: 8px;
+}
+
+.comment-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #18191c;
+  margin: 4px 0;
+}
+
+.comment-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 16px;
+}
+
+.like-btn,
+.reply-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #9499a0;
+  cursor: pointer;
+}
+
+.like-btn:hover,
+.reply-btn:hover {
+  color: #00aeec;
+}
+
+.liked {
+  color: #00aeec;
+}
+
+.reply-area {
+  margin-left: 52px;
+  margin-top: 8px;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  cursor: pointer;
+  color: #00aeec;
+  font-size: 13px;
+}
+
+.reply-header:hover {
+  opacity: 0.8;
+}
+
+.reply-count {
+  font-weight: 500;
+}
+
+.el-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.reply-list {
+  background: #f7f8fa;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.reply-item {
+  padding: 12px;
+  border-bottom: 1px solid #e4e6eb;
+}
+
+.reply-item:last-child {
+  border-bottom: none;
+}
+
+.reply-main {
+  display: flex;
+  gap: 12px;
+}
+
+.reply-avatar {
+  flex-shrink: 0;
+}
+
+.reply-body {
+  flex-grow: 1;
+}
+
+.reply-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #18191c;
+}
+
+.reference {
+  color: #00aeec;
+  cursor: pointer;
+}
+
+.reply-input {
+  margin-top: 12px;
+  background: #fff;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.reply-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.el-icon {
+  transition: transform 0.3s;
 }
 </style> 

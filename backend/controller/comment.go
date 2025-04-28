@@ -190,16 +190,11 @@ func GetPostComments(c *gin.Context) {
 		return
 	}
 
-	// 2. 获取这些顶级评论的所有子评论
-	var rootIDs []int64
-	for _, comment := range rootComments {
-		rootIDs = append(rootIDs, comment.ID)
-	}
-
-	var childComments []models.Comment
-	if err := mysql.DB.Where("root_id IN ? AND status = 1", rootIDs).
+	// 2. 获取这些顶级评论的所有子评论（包括所有层级）
+	var allChildComments []models.Comment
+	if err := mysql.DB.Where("post_id = ? AND status = 1 AND parent_id IS NOT NULL", postID).
 		Order("created_at ASC").
-		Find(&childComments).Error; err != nil {
+		Find(&allChildComments).Error; err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -207,7 +202,17 @@ func GetPostComments(c *gin.Context) {
 	// 3. 获取所有相关用户信息
 	var userIDs []int64
 	userIDMap := make(map[int64]struct{})
-	for _, comment := range append(rootComments, childComments...) {
+
+	// 添加根评论的用户ID
+	for _, comment := range rootComments {
+		if _, exists := userIDMap[comment.UserID]; !exists {
+			userIDs = append(userIDs, comment.UserID)
+			userIDMap[comment.UserID] = struct{}{}
+		}
+	}
+
+	// 添加所有子评论的用户ID
+	for _, comment := range allChildComments {
 		if _, exists := userIDMap[comment.UserID]; !exists {
 			userIDs = append(userIDs, comment.UserID)
 			userIDMap[comment.UserID] = struct{}{}
@@ -234,15 +239,41 @@ func GetPostComments(c *gin.Context) {
 	// 处理顶级评论
 	for i := range rootComments {
 		rootComments[i].User = userMap[rootComments[i].UserID]
+		rootComments[i].Children = make([]models.Comment, 0)
 		commentMap[rootComments[i].ID] = &rootComments[i]
 	}
 
-	// 处理子评论
-	for _, comment := range childComments {
+	// 按照父评论ID组织子评论
+	childrenByParent := make(map[int64][]*models.Comment)
+	for i := range allChildComments {
+		comment := &allChildComments[i]
 		comment.User = userMap[comment.UserID]
-		if parent, exists := commentMap[*comment.ParentID]; exists {
-			parent.Children = append(parent.Children, comment)
+		comment.Children = make([]models.Comment, 0)
+
+		if comment.ParentID != nil {
+			parentID := *comment.ParentID
+			childrenByParent[parentID] = append(childrenByParent[parentID], comment)
 		}
+	}
+
+	// 递归构建评论树
+	var buildCommentTree func(parentID int64) []models.Comment
+	buildCommentTree = func(parentID int64) []models.Comment {
+		children := childrenByParent[parentID]
+		result := make([]models.Comment, 0, len(children))
+
+		for _, child := range children {
+			childCopy := *child // 创建一个副本
+			childCopy.Children = buildCommentTree(child.ID)
+			result = append(result, childCopy)
+		}
+
+		return result
+	}
+
+	// 为每个根评论构建子评论树
+	for i := range rootComments {
+		rootComments[i].Children = buildCommentTree(rootComments[i].ID)
 	}
 
 	ResponseSuccess(c, gin.H{
