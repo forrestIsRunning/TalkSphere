@@ -52,7 +52,7 @@
           <div class="comment-user">
             <el-avatar 
               :size="40" 
-              :src="userInfo?.avatar || defaultAvatar"
+              :src="userInfo?.avatar_url || defaultAvatar"
             />
           </div>
           <el-input
