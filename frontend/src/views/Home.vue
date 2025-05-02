@@ -143,9 +143,9 @@
 
             <div class="post-cover" v-if="post.images?.length">
               <el-image 
-                :src="post.images[0].url" 
+                :src="post.images[0].ImageURL" 
                 fit="cover"
-                :preview-src-list="post.images.map(img => img.url)"
+                :preview-src-list="post.images.map(img => img.ImageURL)"
                 :hide-on-click-modal="true"
               >
                 <template #error>

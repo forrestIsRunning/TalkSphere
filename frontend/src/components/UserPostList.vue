@@ -26,8 +26,8 @@
               <div class="post-images" v-if="post.images?.length">
                 <div v-for="image in post.images" :key="image.id" class="image-container">
                   <el-image 
-                    :src="image.url"
-                    :preview-src-list="post.images.map(img => img.url)"
+                    :src="image.ImageURL"
+                    :preview-src-list="post.images.map(img => img.ImageURL)"
                     fit="cover"
                     class="post-image"
                   >
@@ -53,6 +53,22 @@
                 <span><i class="el-icon-star-on"></i> {{ post.like_count || 0 }}</span>
                 <span><i class="el-icon-collection-tag"></i> {{ post.favorite_count || 0 }}</span>
                 <span><i class="el-icon-chat-dot-round"></i> {{ post.comment_count || 0 }}</span>
+              </div>
+              <div class="actions">
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click.stop="editPost(post)"
+                >
+                  编辑
+                </el-button>
+                <el-button 
+                  type="danger" 
+                  size="small" 
+                  @click.stop="confirmDelete(post)"
+                >
+                  删除
+                </el-button>
               </div>
               <div class="tags" v-if="post.tags?.length">
                 <el-tag v-for="tag in post.tags" :key="tag.ID" size="small">
@@ -81,9 +97,10 @@
 <script setup>
 import { ref, onMounted, defineProps } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatTime } from '@/utils/time'
 import { PictureFilled, Loading } from '@element-plus/icons-vue'
+import { deletePost } from '@/api/post'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -151,6 +168,40 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
   currentPage.value = val
   loadPosts()
+}
+
+// 确认删除
+const confirmDelete = (post) => {
+  ElMessageBox.confirm(
+    '确定要删除这篇帖子吗？此操作不可恢复。',
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(async () => {
+    try {
+      const res = await deletePost(post.id)
+      if (res.data.code === 1000) {
+        ElMessage.success('删除成功')
+        // 重新加载帖子列表
+        loadPosts()
+      } else {
+        ElMessage.error(res.data.msg || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除帖子失败:', error)
+      ElMessage.error('删除帖子失败')
+    }
+  }).catch(() => {
+    // 用户取消删除
+  })
+}
+
+// 编辑帖子
+const editPost = (post) => {
+  router.push(`/post/edit/${post.id}`)
 }
 
 onMounted(() => {
@@ -266,6 +317,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-right: 16px;
 }
 
 .tags {

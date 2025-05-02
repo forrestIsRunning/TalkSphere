@@ -418,7 +418,8 @@ func GetBoardPosts(c *gin.Context) {
 	searchType := c.Query("search_type")
 
 	// 构建查询条件
-	query := mysql.DB.Model(&models.Post{}).Where("board_id = ?", boardID)
+	query := mysql.DB.Model(&models.Post{}).
+		Where("board_id = ? AND status != -1", boardID) // 添加 status 条件
 
 	// 根据搜索类型添加搜索条件
 	if searchQuery != "" {

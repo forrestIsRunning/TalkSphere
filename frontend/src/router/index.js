@@ -5,8 +5,6 @@ import Home from '../views/Home.vue'
 import UserProfile from '../views/UserProfile.vue'
 import store from '../store'
 import { ElMessage } from 'element-plus'
-
-import CreatePost from '../views/CreatePost.vue'
 import PostDetail from '../views/PostDetail.vue'
 import AdminHome from '../views/AdminHome.vue'
 
@@ -42,7 +40,13 @@ const routes = [
   {
     path: '/post/create',
     name: 'CreatePost',
-    component: CreatePost,
+    component: () => import('@/views/CreatePost.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/post/edit/:id',
+    name: 'EditPost',
+    component: () => import('@/views/post/PostEdit.vue'),
     meta: { requiresAuth: true }
   },
   {
