@@ -24,10 +24,10 @@
               <h3>{{ post.title }}</h3>
               <div class="rich-content" v-html="truncateContent(post.content || '')"></div>
               <div class="post-images" v-if="post.images?.length">
-                <div v-for="image in post.images" :key="image.id" class="image-container">
+                <div v-for="image in post.images" :key="image.ID" class="image-container">
                   <el-image 
-                    :src="image.url"
-                    :preview-src-list="post.images.map(img => img.url)"
+                    :src="image.ImageURL"
+                    :preview-src-list="post.images.map(img => img.ImageURL)"
                     fit="cover"
                     class="post-image"
                   >
@@ -48,16 +48,25 @@
               </div>
             </div>
             <div class="post-footer">
-              <div class="stats">
-                <span><i class="el-icon-view"></i> {{ post.view_count || 0 }}</span>
-                <span><i class="el-icon-star-on"></i> {{ post.like_count || 0 }}</span>
-                <span><i class="el-icon-collection-tag"></i> {{ post.favorite_count || 0 }}</span>
-                <span><i class="el-icon-chat-dot-round"></i> {{ post.comment_count || 0 }}</span>
-              </div>
-              <div class="tags" v-if="post.tags?.length">
-                <el-tag v-for="tag in post.tags" :key="tag.ID" size="small">
-                  {{ tag.Name }}
-                </el-tag>
+              <div class="post-meta">
+                <div class="stats">
+                  <span><el-icon><View /></el-icon> {{ post.view_count || 0 }}</span>
+                  <span><el-icon><Star /></el-icon> {{ post.like_count || 0 }}</span>
+                  <span><el-icon><Collection /></el-icon> {{ post.favorite_count || 0 }}</span>
+                  <span><el-icon><ChatLineRound /></el-icon> {{ post.comment_count || 0 }}</span>
+                </div>
+                <div class="tags" v-if="post.tags?.length">
+                  <el-tag
+                    v-for="(tag, index) in post.tags"
+                    :key="tag.ID"
+                    :type="getTagType(index)"
+                    size="small"
+                    effect="light"
+                    class="post-tag"
+                  >
+                    {{ tag.Name }}
+                  </el-tag>
+                </div>
               </div>
             </div>
           </el-card>
@@ -83,7 +92,7 @@ import { ref, onMounted, defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { formatTime } from '@/utils/time'
-import { PictureFilled, Loading } from '@element-plus/icons-vue'
+import { PictureFilled, Loading, View, Star, ChatLineRound, Collection } from '@element-plus/icons-vue'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -153,6 +162,11 @@ const handleCurrentChange = (val) => {
   loadPosts()
 }
 
+const getTagType = (index) => {
+  const types = ['success', 'info', 'warning', 'danger']
+  return types[index % types.length]
+}
+
 onMounted(() => {
   loadPosts()
 })
@@ -163,7 +177,11 @@ export default {
   name: 'UserPostList',
   components: {
     PictureFilled,
-    Loading
+    Loading,
+    View,
+    Star,
+    ChatLineRound,
+    Collection
   }
 }
 </script>
@@ -256,21 +274,43 @@ export default {
   align-items: center;
 }
 
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
 .stats {
   display: flex;
-  gap: 15px;
-  color: #666;
+  gap: 16px;
 }
 
 .stats span {
   display: flex;
   align-items: center;
   gap: 4px;
+  color: #606266;
+  font-size: 14px;
 }
 
 .tags {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.post-tag {
+  font-size: 12px;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 22px;
+  border-radius: 4px;
+  margin: 0;
+}
+
+.post-tag:hover {
+  opacity: 0.85;
 }
 
 .pagination {

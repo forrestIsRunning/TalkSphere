@@ -59,9 +59,7 @@ func CreatePost(c *gin.Context) {
 	p.AllowImages()
 	p.AllowLists()
 	p.AllowTables()
-	// 允许常用样式
 	p.AllowStyles("text-align", "color", "background-color", "font-size", "margin", "padding")
-	// 允许 class 属性
 	p.AllowAttrs("class").Globally()
 
 	sanitizedContent := p.Sanitize(req.Content)
@@ -87,18 +85,25 @@ func CreatePost(c *gin.Context) {
 	}
 	f(doc)
 
-	// 清理文本
+	// 清理文本并生成摘要
 	text = strings.TrimSpace(text)
-	// 限制摘要长度
-	const maxExcerptLength = 200
-	excerpt := text
-	if len(excerpt) > maxExcerptLength {
-		excerpt = excerpt[:maxExcerptLength] + "..."
+	runeText := []rune(text)
+	const maxExcerptLength = 100 // 减小长度以确保不超过数据库限制
+
+	var excerpt string
+	if len(runeText) > maxExcerptLength {
+		excerpt = string(runeText[:maxExcerptLength]) + "..."
+	} else {
+		excerpt = text
 	}
 
 	// 检查是否包含图片
 	if strings.Contains(sanitizedContent, "<img") {
-		excerpt += " [图片]"
+		// 确保添加图片标记后不超过数据库字段长度限制
+		imgText := " [图片]"
+		if len([]rune(excerpt))+len([]rune(imgText)) <= 250 { // 留一些余量
+			excerpt += imgText
+		}
 	}
 
 	// 创建帖子
