@@ -52,6 +52,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/post/edit/:id',
+    name: 'PostEdit',
+    component: () => import('@/views/post/PostEdit.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/admin',
     component: AdminHome,
     meta: { 

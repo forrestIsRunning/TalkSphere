@@ -68,6 +68,22 @@
                   </el-tag>
                 </div>
               </div>
+              <div class="action-buttons">
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click.stop="editPost(post.id)"
+                >
+                  编辑
+                </el-button>
+                <el-button 
+                  type="danger" 
+                  size="small" 
+                  @click.stop="confirmDelete(post.id)"
+                >
+                  删除
+                </el-button>
+              </div>
             </div>
           </el-card>
         </div>
@@ -90,9 +106,10 @@
 <script setup>
 import { ref, onMounted, defineProps } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatTime } from '@/utils/time'
 import { PictureFilled, Loading, View, Star, ChatLineRound, Collection } from '@element-plus/icons-vue'
+import { deletePost } from '@/api/post'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -165,6 +182,37 @@ const handleCurrentChange = (val) => {
 const getTagType = (index) => {
   const types = ['success', 'info', 'warning', 'danger']
   return types[index % types.length]
+}
+
+const editPost = (postId) => {
+  router.push(`/post/edit/${postId}`)
+}
+
+const confirmDelete = async (postId) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这篇帖子吗？删除后将无法恢复。',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    const res = await deletePost(postId)
+    if (res.data.code === 1000) {
+      ElMessage.success('删除成功')
+      loadPosts() // 重新加载帖子列表
+    } else {
+      ElMessage.error(res.data.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除帖子失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 onMounted(() => {
@@ -270,15 +318,14 @@ export default {
 .post-footer {
   margin-top: 15px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .post-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
 }
 
 .stats {
@@ -292,6 +339,16 @@ export default {
   gap: 4px;
   color: #606266;
   font-size: 14px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.action-buttons .el-button {
+  padding: 6px 12px;
 }
 
 .tags {

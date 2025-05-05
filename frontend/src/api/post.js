@@ -61,3 +61,20 @@ export function getUserFavoritePosts(params) {
     }
   })
 }
+
+// 删除帖子
+export function deletePost(id) {
+  return request({
+    url: `/api/posts/${id}`,
+    method: 'delete'
+  })
+}
+
+// 更新帖子
+export function updatePost(id, data) {
+  return request({
+    url: `/api/posts/${id}`,
+    method: 'put',
+    data
+  })
+}

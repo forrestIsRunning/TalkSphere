@@ -311,6 +311,12 @@ func DeletePost(c *gin.Context) {
 
 // UpdatePost 更新帖子
 func UpdatePost(c *gin.Context) {
+	var req UpdatePostRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
 	postID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		ResponseError(c, CodeInvalidParam)
@@ -323,89 +329,161 @@ func UpdatePost(c *gin.Context) {
 		return
 	}
 
-	var req UpdatePostRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		ResponseError(c, CodeInvalidParam)
-		return
-	}
-
+	// 获取帖子信息
 	var post models.Post
 	if err := mysql.DB.First(&post, postID).Error; err != nil {
-		ResponseError(c, CodeInvalidParam)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ResponseError(c, CodeInvalidParam)
+		} else {
+			zap.L().Error("get post failed", zap.Error(err))
+			ResponseError(c, CodeServerBusy)
+		}
 		return
 	}
 
-	// 检查是否是帖子作者
+	// 检查是否是作者
 	if *post.AuthorID != userID {
 		ResponseError(c, CodeNoPermision)
 		return
+	}
+
+	// 对内容进行 XSS 清理
+	p := bluemonday.UGCPolicy()
+	p.AllowStandardURLs()
+	p.AllowStandardAttributes()
+	p.AllowImages()
+	p.AllowLists()
+	p.AllowTables()
+	p.AllowStyles("text-align", "color", "background-color", "font-size", "margin", "padding")
+	p.AllowAttrs("class").Globally()
+
+	// 更新帖子内容
+	updates := make(map[string]interface{})
+	if req.Title != "" {
+		updates["title"] = req.Title
+	}
+	if req.Content != "" {
+		sanitizedContent := p.Sanitize(req.Content)
+		updates["content"] = sanitizedContent
+
+		// 生成摘要
+		div := strings.NewReader(sanitizedContent)
+		doc, err := html.Parse(div)
+		if err != nil {
+			zap.L().Error("parse html failed", zap.Error(err))
+			ResponseError(c, CodeServerBusy)
+			return
+		}
+
+		var text string
+		var f func(*html.Node)
+		f = func(n *html.Node) {
+			if n.Type == html.TextNode {
+				text += n.Data
+			}
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				f(c)
+			}
+		}
+		f(doc)
+
+		// 清理文本并生成摘要
+		text = strings.TrimSpace(text)
+		runeText := []rune(text)
+		const maxExcerptLength = 100
+
+		var excerpt string
+		if len(runeText) > maxExcerptLength {
+			excerpt = string(runeText[:maxExcerptLength]) + "..."
+		} else {
+			excerpt = text
+		}
+
+		// 检查是否包含图片
+		if strings.Contains(sanitizedContent, "<img") {
+			imgText := " [图片]"
+			if len([]rune(excerpt))+len([]rune(imgText)) <= 250 {
+				excerpt += imgText
+			}
+		}
+
+		updates["excerpt"] = excerpt
+	}
+	if req.BoardID != 0 {
+		updates["board_id"] = req.BoardID
 	}
 
 	// 开启事务
 	tx := mysql.DB.Begin()
 
 	// 更新帖子基本信息
-	updates := map[string]interface{}{}
-	if req.Title != "" {
-		updates["title"] = req.Title
-	}
-	if req.Content != "" {
-		updates["content"] = req.Content
-	}
-	if req.BoardID != 0 {
-		updates["board_id"] = req.BoardID
-	}
-
 	if err := tx.Model(&post).Updates(updates).Error; err != nil {
 		tx.Rollback()
+		zap.L().Error("update post failed", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
 	// 更新标签
-	if len(req.Tags) > 0 {
-		var tags []models.Tag
+	if req.Tags != nil {
+		// 删除原有标签关联
+		if err := tx.Where("post_id = ?", postID).Delete(&models.PostTag{}).Error; err != nil {
+			tx.Rollback()
+			zap.L().Error("delete post tags failed", zap.Error(err))
+			ResponseError(c, CodeServerBusy)
+			return
+		}
+
+		// 添加新标签
 		for _, tagName := range req.Tags {
+			// 查找或创建标签
 			var tag models.Tag
 			if err := tx.Where("name = ?", tagName).FirstOrCreate(&tag, models.Tag{Name: tagName}).Error; err != nil {
 				tx.Rollback()
+				zap.L().Error("create tag failed", zap.Error(err))
 				ResponseError(c, CodeServerBusy)
 				return
 			}
-			tags = append(tags, tag)
-		}
-		if err := tx.Model(&post).Association("Tags").Replace(tags); err != nil {
-			tx.Rollback()
-			ResponseError(c, CodeServerBusy)
-			return
+
+			// 创建帖子-标签关联
+			if err := tx.Create(&models.PostTag{PostID: postID, TagID: tag.ID}).Error; err != nil {
+				tx.Rollback()
+				zap.L().Error("create post tag failed", zap.Error(err))
+				ResponseError(c, CodeServerBusy)
+				return
+			}
 		}
 	}
 
-	// 更新图片
-	if len(req.ImageIDs) > 0 {
+	// 更新图片关联
+	if req.ImageIDs != nil {
 		// 删除原有图片关联
 		if err := tx.Where("post_id = ?", postID).Delete(&models.PostImage{}).Error; err != nil {
 			tx.Rollback()
+			zap.L().Error("delete post images failed", zap.Error(err))
 			ResponseError(c, CodeServerBusy)
 			return
 		}
 
-		// 添加新的图片关联
-		for i, imageID := range req.ImageIDs {
-			postImage := models.PostImage{
-				PostID:    postID,
-				ID:        imageID,
-				SortOrder: i,
-			}
-			if err := tx.Create(&postImage).Error; err != nil {
+		// 添加新图片关联
+		for _, imageID := range req.ImageIDs {
+			if err := tx.Create(&models.PostImage{PostID: postID, ID: imageID}).Error; err != nil {
 				tx.Rollback()
+				zap.L().Error("create post image failed", zap.Error(err))
 				ResponseError(c, CodeServerBusy)
 				return
 			}
 		}
 	}
 
-	tx.Commit()
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		zap.L().Error("commit transaction failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
 	ResponseSuccess(c, nil)
 }
 
