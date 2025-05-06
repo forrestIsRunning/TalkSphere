@@ -491,6 +491,10 @@ func UpdatePost(c *gin.Context) {
 func GetBoardPosts(c *gin.Context) {
 	// 获取板块ID
 	boardID := c.Param("board_id")
+	zap.L().Info("开始获取板块帖子列表",
+		zap.String("board_id", boardID),
+		zap.String("search_query", c.Query("search_query")),
+		zap.String("search_type", c.Query("search_type")))
 
 	// 获取分页参数
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -501,7 +505,7 @@ func GetBoardPosts(c *gin.Context) {
 	searchType := c.Query("search_type")
 
 	// 构建查询条件
-	query := mysql.DB.Model(&models.Post{}).Where("board_id = ? AND status != -1", boardID)
+	query := mysql.DB.Model(&models.Post{}).Where("posts.board_id = ? AND posts.status != -1", boardID)
 
 	// 根据搜索类型添加搜索条件
 	if searchQuery != "" {
@@ -514,16 +518,20 @@ func GetBoardPosts(c *gin.Context) {
 			// 搜索帖子内容
 			query = query.Where("posts.content LIKE ?", "%"+searchQuery+"%")
 		case "all":
-			// 同时搜索用户名和帖子内容
-			query = query.Joins("JOIN users ON posts.author_id = users.id").
-				Where("users.username LIKE ? OR posts.content LIKE ?",
-					"%"+searchQuery+"%", "%"+searchQuery+"%")
+			// 同时搜索标题和内容
+			query = query.Where("(posts.title LIKE ? OR posts.content LIKE ?)",
+				"%"+searchQuery+"%", "%"+searchQuery+"%")
 		}
 	}
 
 	// 获取总数
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
+		zap.L().Error("获取帖子总数失败",
+			zap.Error(err),
+			zap.String("board_id", boardID),
+			zap.String("search_query", searchQuery),
+			zap.String("search_type", searchType))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -537,9 +545,20 @@ func GetBoardPosts(c *gin.Context) {
 		Limit(size).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
+		zap.L().Error("查询帖子列表失败",
+			zap.Error(err),
+			zap.String("board_id", boardID),
+			zap.String("search_query", searchQuery),
+			zap.String("search_type", searchType),
+			zap.Int("page", page),
+			zap.Int("size", size))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
+
+	zap.L().Info("成功查询帖子列表",
+		zap.Int("post_count", len(posts)),
+		zap.Int64("total", total))
 
 	// 构建响应数据
 	var postList []map[string]interface{}
