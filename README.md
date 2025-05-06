@@ -156,13 +156,6 @@ npm run serve
 npm run build
 ```
 
-## 📚 API 文档
-
-访问 Swagger API 文档：
-```
-http://localhost:8989/swagger/index.html
-```
-
 ## 📁 项目结构
 
 ```
@@ -183,13 +176,13 @@ TalkSphere/
 ## 📷 功能展示
 
 ### 首页
-![首页截图](doc/images/home.png)
+![首页截图](doc/images/home.jpg)
 
 ### 数据分析
-![数据分析](doc/images/analysis.png)
+![数据分析](doc/images/analysis.jpg)
 
 ### 内容管理
-![内容管理](doc/images/content.png)
+![内容管理](doc/images/content.jpg)
 
 ## 👥 开发团队
 
