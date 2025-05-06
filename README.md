@@ -1,129 +1,220 @@
-## TalkSphere
+# TalkSphere 🌐
 
-### **1. 用户模块**
+<div align="center">
 
-- **注册**：用户可以创建账号。
-- **登录**：用户可以通过账号密码进行登录。
-- **登出**：用户可以退出当前会话。
-- **RBAC权限分配**：不同角色的用户具有不同的权限，如普通用户、管理员等，使用角色基于访问控制（RBAC）来管理权限。
+[![Go Version](https://img.shields.io/badge/Go-1.23.1-00ADD8?style=flat-square&logo=go)](https://golang.org)
+[![Vue Version](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat-square&logo=vue.js)](https://vuejs.org)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-### **2. 板块管理模块**
+</div>
 
-- **板块管理**：管理论坛的不同板块，每个板块可以承载不同主题的帖子，管理员可以新增、修改或删除板块。
+> 🚀 一个现代化的社区论坛系统，专注于用户体验和功能丰富性
 
-### **3. 帖子模块**
+## ✨ 特色功能
 
-- **发表帖子**：用户可以发表带有图片和文字的帖子，内容可以包括图片、文字、链接等多种格式。
+### 👥 用户系统
+- 🔐 安全的用户认证（注册、登录、登出）
+- 👤 个性化资料管理（头像、个人简介）
+- 🛡️ 基于 RBAC 的权限管理
+- 👑 多角色支持（普通用户、管理员、超级管理员）
 
-### **4. 互动模块**
+### 📝 内容管理
+- 📋 多板块内容分类
+- 📝 富文本编辑器支持
+- 🖼️ 多图片上传功能
+- ✏️ 帖子 CRUD 操作
+- 💬 树形评论系统
 
-- **评论**：帖子下方允许用户进行评论，支持树形结构的评论展示，即评论可以嵌套和回复。
-- **点赞**：用户可以对帖子或评论进行点赞。
-- **收藏**：用户可以收藏自己喜欢的帖子，以便以后查看。
+### 🤝 社交互动
+- 👍 帖子点赞/取消点赞
+- 💭 评论点赞/取消点赞
+- ⭐ 帖子收藏功能
+- 🔔 用户关注系统
 
-### **5. 榜单模块**
+### 🔍 搜索功能
+- 📊 智能内容搜索
+- 👥 用户信息检索
+- 🎯 多维度模糊匹配
 
-- **排行榜**：展示基于某些数据（如点赞数、评论数等）和算法计算的实时榜单（例如 Top 10 最受欢迎的帖子）。
+### 📊 数据分析
+- 📈 用户活跃度分析
+- 📊 内容增长趋势图
+- 🏆 热门帖子排行
+- ☁️ 内容词云可视化
 
-### **6. 模糊搜索模块**
+## 🛠️ 技术栈
 
-- **帖子搜索**：用户可以通过关键字搜索帖子，支持模糊搜索，返回相关帖子列表。
+### 后端技术
+- 🔧 Go 1.23.1
+- 🌐 Gin Web Framework
+- 💾 GORM + MySQL
+- 📦 Redis 缓存
+- 🔒 Casbin 权限控制
+- 🎟️ JWT 认证
+- ☁️ 腾讯云 COS 对象存储
 
-### **7. 数据可视化模块**
+### 前端技术
+- 🎨 Vue.js 3.x
+- 🎯 Element Plus UI
+- 🔄 Axios HTTP 客户端
+- 🛣️ Vue Router
+- 🗃️ Vuex 状态管理
 
-- **数据展示**：将论坛的各种数据（如用户活跃度、帖子数量、点赞数等）通过图表或其他方式进行可视化，帮助管理员或用户分析数据趋势。
+## 🚀 快速开始
+
+### 环境要求
+- Go 1.23.1+
+- Docker & Docker Compose
+- Node.js 16+
+- npm 8+
+
+### 🐳 数据库部署
+
+1. 使用 Docker Compose 启动 MySQL
+```bash
+cd backend/deploy
+docker-compose up -d
+```
+
+MySQL 将以以下配置启动：
+- 端口: 3306
+- 数据库: TalkSphere
+- 用户名: forrest
+- 密码: 571400yst
+- Root 密码: root
+
+数据库配置说明：
+```yaml
+volumes:
+  - ./mysql/data:/var/lib/mysql           # 数据持久化
+  - ./mysql/conf:/etc/mysql/conf.d        # 配置文件
+  - ./mysql/init:/docker-entrypoint-initdb.d  # 初始化SQL脚本
+
+配置参数：
+  - 默认认证插件: mysql_native_password
+  - 字符集: utf8mb4
+  - 排序规则: utf8mb4_general_ci
+  - 表名大小写不敏感: lower_case_table_names=1
+```
+
+### 🔧 后端部署
+
+1. 克隆项目
+```bash
+git clone https://github.com/yourusername/TalkSphere.git
+cd TalkSphere/backend
+```
+
+2. 安装依赖
+```bash
+go mod tidy
+```
+
+3. 确认配置文件
+```bash
+# 检查配置文件中的数据库连接信息是否与 Docker Compose 中的配置匹配
+vim conf/config.yaml
+```
+
+配置示例：
+```yaml
+mysql:
+  host: "127.0.0.1"
+  port: 3306
+  user: "forrest"
+  password: "571400yst"
+  db: "TalkSphere"
+  max_open_connection: 20
+  max_idle_connection: 10
+```
+
+4. 启动服务
+```bash
+go run main.go
+```
+
+### 🎨 前端部署
+
+1. 进入前端目录
+```bash
+cd ../frontend
+```
+
+2. 安装依赖
+```bash
+npm install
+```
+
+3. 开发环境运行
+```bash
+npm run serve
+```
+
+4. 生产环境构建
+```bash
+npm run build
+```
+
+## 📚 API 文档
+
+访问 Swagger API 文档：
+```
+http://localhost:8989/swagger/index.html
+```
+
+## 📁 项目结构
+
+```
+TalkSphere/
+├── 📂 backend/                # 后端代码
+│   ├── 📄 conf/              # 配置文件
+│   ├── 📄 controller/        # 控制器
+│   ├── 📄 middleware/        # 中间件
+│   ├── 📄 models/           # 数据模型
+│   ├── 📄 pkg/              # 公共包
+│   └── 📄 router/           # 路由
+├── 📂 frontend/             # 前端代码
+│   ├── 📄 public/          # 静态资源
+│   └── 📄 src/             # 源代码
+└── 📂 doc/                 # 文档
+```
+
+## 📷 功能展示
+
+### 首页
+![首页截图](doc/images/home.png)
+
+### 数据分析
+![数据分析](doc/images/analysis.png)
+
+### 内容管理
+![内容管理](doc/images/content.png)
+
+## 👥 开发团队
+
+- 👨‍💻 [@taooooooooooooooo](https://github.com/forrestIsRunning) - 项目负责人
+
+## 📄 许可证
+
+本项目采用 [MIT](LICENSE) 许可证。
+
+## 🤝 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 提交 Pull Request
+
+## 🌟 致谢
+
+感谢所有为本项目做出贡献的开发者！
 
 ---
 
-## timeLine
+<div align="center">
 
-- 2025.1.3 
-  - 项目前端、后端骨架搭建
-  - 登陆、注册前后端连调
-- 2025.1.4
-  - 实现JWT
-  - 对接腾讯OSS，实现bucket创建和object的获取、删除、更新操作
-  - 实现用户头像上传，bio更新
-  - 表结构设计；简化业务
-  - fix 登陆后，跳转forum失败问题
-- 2025.1.5
-  - 表结构设计
-  - 业务功能设计
-  - 板块模块的CRUD
-  - 使用casbin完成 用户RBAC
-- 2025.1.8
-  - fix JWT
-  - 帖子模块
-    - 用户发表帖子
-    - 根据id获取帖子详情
-    - 根据id删除帖子
-    - 根据id更新帖子
-    - 获取某用户的所有帖子
-    - 获取某板块下的所有帖子
-- 2025.1.9
-  - 交互模块
-    - 评论
-      - 根评论
-      - 子评论
-    - 点赞
-      - 给贴子点赞
-      - 给用户评论点赞
-    - 收藏帖子
-- 2025.1.10
-  - 前端
-    -用户发表帖子
-    - 按照板块查看帖子列表
-    - 查看帖子详情
-    - 给帖子点赞、收藏、阅读量增加
-- 2025.2.2
-  - 后端
-    - 提供casbin用户鉴权接口，判断userid对应的用户是否有admin权限 /user/check
-    - 提供查询用户总数、帖子总数、板块总数后端接口
-    - 提供用户列表接口
-    - 实现模糊搜索，可以按照用户名、ID、邮箱信息、个人简介来进行模糊搜索，查询对应的用户
-  - 前端
-    - 提供admin登陆页面
-    - adminHome页面实现实现板块的增删改查
-    - adminHome页面实现用户列表的展示
-    - adminHome页面实现模糊搜索，可以按照用户名、ID、邮箱信息、个人简介来进行模糊搜索，查询对应的用户
-- 2025.2.3
-  - 前端
-    - 帖子创建时支持富文本创建
-    - 帖子创建时支持多图片上传
-    - 帖子列表展示时，显示第一张图片在右边
-    - 帖子详情中的作者名称fix
-    - 支持帖子评论嵌套评论
-    - 支持用户和帖子内容的模糊查询
-  - 数据制造
-    - 制造用户数据
-    - 制造帖子数据
-- 2025.2.4
-  - 支持用户查看自己点赞的帖子
-  - 支持用户查看自己收藏的帖子
-  - 支持用户查看自己发表的帖子
-  - 支持用户查看自己评论的帖子
-  - fix admin登陆不久后，自动登出问题
-  - 前端界面 用户注册需要验证密码和再次输入密码的一致性
-  - adminHome支持权限的分配，admin用户可以分配xxx普通用户admin的权限
-  - 支持用户以富文本的格式写帖子 TOOD
-  - 模糊搜索框置顶
-  - 右边的滚动条设置为透明
-  - fix图片渲染问题
-- 2025.2.5
-  - 榜单模块（展示基于某些数据（如点赞数、评论数等）和算法计算的实时榜单（例如 Top 10 最受欢迎的帖子））
-- 2025.2.6
-  - 数据分析的内容
-- 2025.2.21
-  - 数据分析
-    - 用户分析
-      - 以发帖数、帖子点赞数、帖子阅读数为指标，天、周、月活跃用户的姓名、头像信息展示
-![img.png](doc/images/img.png)
-      - 【折线图📈】 每天增长用户量、每周增长用户量、每月增长用户量
-![img_2.png](doc/images/img_2.png)
-    - 帖子分析
-      - 以【阅读数】、【点赞数】、【收藏数】、【创建时间先后顺序】等指标构建的帖子
-![img_3.png](doc/images/img_3.png)
-      - 【折线图📈】每天增长帖子量、每周增长帖子量、每月增长帖子量
-![img_4.png](doc/images/img_4.png)
-      - 词图云
-![img_1.png](doc/images/img_1.png)
+**TalkSphere** ©2025 Created by [@taooooooooooooooo](https://github.com/forrestIsRunning)
+
+</div>
