@@ -564,15 +564,16 @@ func GetBoardPosts(c *gin.Context) {
 	var postList []map[string]interface{}
 	for _, post := range posts {
 		postData := map[string]interface{}{
-			"id":            post.ID,
-			"title":         post.Title,
-			"content":       post.Content,
-			"author_id":     post.AuthorID,
-			"view_count":    post.ViewCount,
-			"like_count":    post.LikeCount,
-			"comment_count": post.CommentCount,
-			"created_at":    post.CreatedAt,
-			"updated_at":    post.UpdatedAt,
+			"id":             post.ID,
+			"title":          post.Title,
+			"content":        post.Content,
+			"author_id":      post.AuthorID,
+			"view_count":     post.ViewCount,
+			"like_count":     post.LikeCount,
+			"comment_count":  post.CommentCount,
+			"created_at":     post.CreatedAt,
+			"updated_at":     post.UpdatedAt,
+			"favorite_count": post.FavoriteCount,
 		}
 
 		// 处理作者信息
