@@ -62,6 +62,18 @@ export function getUserFavoritePosts(params) {
   })
 }
 
+// 获取用户评论过的帖子
+export function getUserCommentedPosts(params) {
+  return request({
+    url: '/api/posts/user/comments',
+    method: 'get',
+    params: {
+      page: params.page,
+      size: params.size
+    }
+  })
+}
+
 // 删除帖子
 export function deletePost(id) {
   return request({

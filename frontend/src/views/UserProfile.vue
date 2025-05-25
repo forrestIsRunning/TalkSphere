@@ -49,6 +49,12 @@
           </div>
         </div>
       </div>
+      <div class="user-links">
+        <router-link to="/user/posts" class="user-link">我的帖子</router-link>
+        <router-link to="/user/likes" class="user-link">我的点赞</router-link>
+        <router-link to="/user/favorites" class="user-link">我的收藏</router-link>
+        <router-link to="/user/comments" class="user-link">我的评论</router-link>
+      </div>
     </el-card>
   </div>
 </template>
@@ -227,5 +233,24 @@ export default {
 .user-info p {
   margin: 5px 0;
   color: #909399;
+}
+
+.user-links {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.user-link {
+  color: #409EFF;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.user-link:hover {
+  background-color: #ecf5ff;
 }
 </style> 

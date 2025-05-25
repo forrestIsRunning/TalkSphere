@@ -87,6 +87,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup) {
 	r.GET("/posts/user", controller.GetUserPosts)
 	r.GET("/posts/user/likes", controller.GetUserLikedPosts)
 	r.GET("/posts/user/favorites", controller.GetUserFavoritePosts)
+	r.GET("/posts/user/comments", controller.GetUserCommentedPosts)
 	r.POST("/posts/image", controller.UploadPostImage)
 
 	// 互动相关

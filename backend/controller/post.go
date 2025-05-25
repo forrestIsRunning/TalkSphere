@@ -949,3 +949,102 @@ func getUserFavoritePosts(userID int64, page, size int64) ([]models.Post, int64,
 
 	return posts, total, nil
 }
+
+// GetUserCommentedPosts 获取用户评论过的帖子
+func GetUserCommentedPosts(c *gin.Context) {
+	userID, err := getCurrentUserIDInt64(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+
+	zap.L().Info("开始获取用户评论过的帖子")
+
+	// 获取分页参数
+	page, size := getPageInfo(c)
+	zap.L().Info("获取分页参数",
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	// 获取帖子和总数
+	posts, total, err := getUserCommentedPosts(userID, page, size)
+	if err != nil {
+		zap.L().Error("获取用户评论过的帖子失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	zap.L().Info("成功获取用户评论过的帖子",
+		zap.Int64("total", total),
+		zap.Int("post_count", len(posts)))
+
+	ResponseSuccess(c, gin.H{
+		"posts":        posts,
+		"total":        total,
+		"current_page": page,
+		"page_size":    size,
+	})
+}
+
+func getUserCommentedPosts(userID int64, page, size int64) ([]models.Post, int64, error) {
+	zap.L().Info("开始查询用户评论过的帖子",
+		zap.Int64("user_id", userID),
+		zap.Int64("page", page),
+		zap.Int64("size", size))
+
+	var posts []models.Post
+	var total int64
+
+	// 构建基础查询
+	db := mysql.DB.Table("posts").
+		Joins("JOIN comments ON posts.id = comments.post_id").
+		Where("comments.user_id = ? AND comments.status = 1 AND posts.status != -1", userID).
+		Group("posts.id") // 使用 GROUP BY 去重，因为一个用户可能对同一个帖子评论多次
+
+	// 获取总数
+	if err := db.Count(&total).Error; err != nil {
+		zap.L().Error("获取评论过的帖子总数失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID))
+		return nil, 0, err
+	}
+	zap.L().Info("获取到评论过的帖子总数", zap.Int64("total", total))
+
+	// 查询帖子数据
+	err := db.Preload("Author").
+		Preload("Tags").
+		Preload("Images").
+		Order("MAX(comments.created_at) DESC"). // 按最新评论时间排序
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Find(&posts).Error
+
+	if err != nil {
+		zap.L().Error("查询评论过的帖子详情失败",
+			zap.Error(err),
+			zap.Int64("user_id", userID),
+			zap.Int64("page", page),
+			zap.Int64("size", size))
+		return nil, 0, err
+	}
+
+	zap.L().Info("成功查询评论过的帖子详情",
+		zap.Int("post_count", len(posts)),
+		zap.Int64("user_id", userID))
+
+	// 记录每个帖子的基本信息
+	for i, post := range posts {
+		zap.L().Debug("帖子详情",
+			zap.Int("index", i),
+			zap.Int64("post_id", post.ID),
+			zap.String("title", post.Title),
+			zap.Int64("author_id", *post.AuthorID),
+			zap.Int("tag_count", len(post.Tags)),
+			zap.Int("image_count", len(post.Images)))
+	}
+
+	return posts, total, nil
+}
